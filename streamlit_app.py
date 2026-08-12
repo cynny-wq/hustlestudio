@@ -11,6 +11,48 @@ st.markdown("Standalone digital tools designed to help Kenyan content creators g
 
 # Create the tab navigation
 tab1, tab2 = st.tabs(["💡 Tool 1: Viral Hook Bot", "🎬 Tool 4: Caption King"])
+import pandas as pd
+
+# Initialize tracking state in the user's browser session
+if "payment_unlocked" not in st.session_state:
+    st.session_state.payment_unlocked = False
+
+if not st.session_state.payment_unlocked:
+    st.markdown("---")
+    st.info("🔒 **Premium Access Required**")
+    st.markdown("""
+    Spend **200 KES** once to save thousands on editing fees and eliminate hours of creative block this month.
+    
+    ### How to Unlock Instantly:
+    1. Go to M-Pesa -> **Send Money**
+    2. Enter Phone Number: **[INSERT_YOUR_PERSONAL_PHONE_NUMBER_HERE]**
+    3. Amount: **200 KES**
+    4. Once you send, paste your **M-Pesa Transaction Code** below to activate your 30-day access.
+    """)
+    
+    user_code = st.text_input("Enter M-Pesa Transaction Code (e.g., SGH48DKJ93)").strip().upper()
+    
+    if st.button("🔓 Verify & Activate Suite"):
+        try:
+            # Replace the link below with your actual Google Sheets CSV Publish link
+            sheet_csv_url = "PASTE_YOUR_GOOGLE_SHEETS_CSV_LINK_HERE"
+            
+            # Read your active spreadsheet from the cloud instantly
+            df = pd.read_csv(sheet_csv_url)
+            
+            # Convert all codes in your sheet to clean, uppercase text strings
+            valid_codes = df['mpesa_code'].astype(str).str.strip().str.upper().tolist()
+            
+            if user_code in valid_codes:
+                st.session_state.payment_unlocked = True
+                st.success("✅ Payment verified! Unlocking your creator tools...")
+                st.rerun()
+            else:
+                st.error("❌ Transaction code not found. If you just sent the payment, please allow 2 minutes for activation.")
+        except Exception as e:
+            st.error("⚠️ System verification glitch. Please try again in a few moments.")
+            
+    st.stop() # Prevents users from seeing your tools unless unlocked
 
 # ==========================================
 # TAB 1: KENYAN VIRAL HOOK GENERATOR
