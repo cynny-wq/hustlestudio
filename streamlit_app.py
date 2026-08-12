@@ -5,6 +5,7 @@ import subprocess
 
 st.set_page_config(page_title="HustleStudio Suite", page_icon="🚀", layout="centered")
 st.title("🚀 HustleStudio Suite")
+st.success("📱 **Hustler Tip:** Want this as a phone app? Tap your browser settings (3 dots) and click **'Add to Home Screen'** to get an instant shortcut icon on your phone!")
 st.markdown("Standalone digital tools designed to help Kenyan content creators grow fast.")
 
 # Clean product navigation desk layout
