@@ -26,8 +26,6 @@ with tab1:
             with st.spinner("🎨 Parsing creative layers and loading cinematic file..."):
                 p_lower = video_prompt.lower()
                 
-                # Standalone database links containing premium, pre-rendered AI animation assets 
-                # This guarantees 1-second load times without ever hitting network timeout crashes!
                 video_url = None
                 
                 if "robot" in p_lower:
@@ -40,15 +38,13 @@ with tab1:
                     video_url = "https://mixkit.co"
                     st.success("🌌 Detected Concept: Cosmic Wormhole Warp")
                 else:
-                    # Universal premium default background abstract loop if keywords match generally
                     video_url = "https://mixkit.co"
                     st.success("✨ Detected Concept: High-Definition Abstract Creative Loop")
                 
                 if video_url:
-                    # Render the crisp video directly to the user's mobile or computer browser layout screen
-                   st.video(video_url, format="video/mp4", start_time=0, loop=True, autoplay=True)
-
-                    st.caption("💡 Tip for creators: You can download this custom background layout file right from the video player settings dropdown icon menu box panel window.")
+                    # FIX: Perfectly aligned arguments with autoplay and looping enabled natively
+                    st.video(video_url, format="video/mp4", start_time=0, loop=True, autoplay=True)
+                    st.caption("💡 Tip for creators: You can download this custom background layout file right from the video player settings.")
 
 # ==========================================
 # TOOL 2: KENYAN VIRAL HOOKS
@@ -79,6 +75,7 @@ with tab3:
         text_position = st.selectbox("📍 Position", ["Bottom Center", "Middle Center", "Top Center"])
         
     uploaded_file = st.file_uploader("Upload Video (MP4)", type=["mp4"], key="video_uploader_field")
+
 
 
 
