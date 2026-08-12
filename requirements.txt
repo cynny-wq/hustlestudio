@@ -1,3 +1,7 @@
 openai-whisper
 streamlit
 pandas
+requests
+opencv-python-headless
+numpy
+
