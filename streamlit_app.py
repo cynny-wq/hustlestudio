@@ -25,7 +25,7 @@ if not st.session_state.payment_unlocked:
     
     ### How to Unlock Instantly:
     1. Go to M-Pesa -> **Send Money**
-    2. Enter Phone Number: **[INSERT_YOUR_PERSONAL_PHONE_NUMBER_HERE]**
+    2. Enter Phone Number: **[0799090363]**
     3. Amount: **200 KES**
     4. Once you send, paste your **M-Pesa Transaction Code** below to activate your 30-day access.
     """)
