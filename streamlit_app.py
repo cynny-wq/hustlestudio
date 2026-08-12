@@ -52,7 +52,7 @@ st.markdown("Standalone digital tools designed to help Kenyan content creators g
 # ==========================================
 
 # 1. INITIALIZE GLOBAL PIPELINE STATE KEYS
-# This forces Streamlit to remember data across refreshes
+# Ensures Streamlit retains data across user selections
 if "generated_hooks" not in st.session_state:
     st.session_state.generated_hooks = []
 if "current_topic" not in st.session_state:
@@ -63,7 +63,7 @@ if "generated_script" not in st.session_state:
     st.session_state.generated_script = ""
 
 # 2. CREATE WORKSPACE NAVIGATION TABS
-# Organizes the tool collection into a sequential 3-step workflow pipeline
+# Sets up our sequential creator workflow pipeline across 3 tabs
 tab1, tab2, tab3 = st.tabs([
     "💡 1: Viral Hook Bot", 
     "📝 2: AI Script Builder", 
@@ -76,7 +76,7 @@ with tab1:
     st.subheader("💡 Tool 1: Viral Hook Bot")
     st.markdown("Beat creative block instantly. Get hooks tailored for local Kenyan audiences.")
     
-    # Text input field linked directly to memory state
+    # Input text field tied dynamically to the memory engine
     topic_input = st.text_input(
         "What is your video about? (e.g., 'selling shoes', 'cooking pilau')", 
         value=st.session_state.current_topic,
@@ -86,10 +86,10 @@ with tab1:
     if st.button("⚡ Generate Hooks"):
         cleaned_topic = topic_input.strip()
         if cleaned_topic:
-            # Save the active topic to global state
+            # Lock the current topic into active session state
             st.session_state.current_topic = cleaned_topic
             
-            # Localized formatting models optimized for Nairobi content trends
+            # Localized trend formulas customized for East African engagement
             st.session_state.generated_hooks = [
                 f"USIWAHI jaribu {cleaned_topic} hapa Kenya kabla ujue hii siri...",
                 f"Mbona hakuna mtu anakuambia ukweli kuhusu {cleaned_topic}?",
@@ -99,18 +99,17 @@ with tab1:
         else:
             st.warning("⚠️ Please input a topic description first.")
 
-    # Render hooks out of memory state if they exist
+    # Render hooks out of memory state with routing buttons
     if st.session_state.generated_hooks:
         st.markdown(f"### 🚀 Viral Hooks Generated for: '{st.session_state.current_topic}'")
         st.caption("Click a hook below to push it straight into the AI Script Builder (Tab 2):")
         
-        # Loop through hooks and add a data-forwarding pipeline button to each
+        # Display each hook with an independent workflow forwarding link trigger
         for i, hook_text in enumerate(st.session_state.generated_hooks, start=1):
             with st.container():
-                # Render using the responsive mobile styling we defined in Block 1
                 st.markdown(f"<div class='hook-box'><strong>Hook #{i}:</strong> {hook_text}</div>", unsafe_allow_html=True)
                 
-                # Assign a unique button key per loop item to prevent Streamlit render conflicts
+                # Assign distinct keys to buttons inside loops to avoid crashing state rules
                 if st.button(f"⚡ Use Hook #{i} for my Script", key=f"fwd_hook_{i}"):
                     st.session_state.selected_hook = hook_text
                     st.success("👉 Hook sent! Open the 'AI Script Builder' tab to complete your script.")
@@ -122,13 +121,13 @@ with tab2:
     st.markdown("Turn your selected hook into a full, high-retention video script with visual cues and a clear Call-To-Action (CTA).")
     
     # 1. LIVE SECURITY API KEY VALIDATION CHANNELS
-    # Pulls securely from either cloud secrets environment maps or local runtimes
-    GROQ_API_KEY = st.secrets.get("GROQ_API_KEY", os.environ.get("GROQ_API_KEY", ""))
+    # Pulls securely from either cloud secrets maps or local runtimes
+    OPENAI_API_KEY = st.secrets.get("OPENAI_API_KEY", os.environ.get("OPENAI_API_KEY", ""))
     
-    if not GROQ_API_KEY:
-        st.error("🔑 **System Configuration Missing:** Please set your `GROQ_API_KEY` in your Streamlit Secrets panel to enable AI Generation features.")
+    if not OPENAI_API_KEY:
+        st.error("🔑 **System Configuration Missing:** Please set your `OPENAI_API_KEY` in your Streamlit Secrets panel to enable AI Generation features.")
 
-    # 2. DATA PIPELINE DROPPING INPUT LAYER
+    # 2. DATA PIPELINE INPUT LAYER
     # Auto-populates text dynamically if a button was clicked in Tab 1
     active_hook = st.text_area(
         "Your Selected Video Hook:", 
@@ -147,12 +146,12 @@ with tab2:
     )
 
     # 3. HIGH-SPEED CLOUD RUNTIME COMPILATION TRIPS
-    if st.button("🔥 Generate Full High-Retention Script") and GROQ_API_KEY:
+    if st.button("🔥 Generate Full High-Retention Script") and OPENAI_API_KEY:
         if active_hook.strip():
-            with st.spinner("🧠 Writing your high-retention script via Cloud LLM Engine..."):
+            with st.spinner("🧠 Writing your high-retention script via OpenAI Engine..."):
                 try:
-                    from groq import Groq # Localized import pattern protects baseline performance
-                    client = Groq(api_key=GROQ_API_KEY)
+                    from openai import OpenAI # Localized import pattern protects baseline performance
+                    client = OpenAI(api_key=OPENAI_API_KEY)
                     
                     system_prompt = (
                         "You are an expert short-form content scriptwriter specializing in TikTok, Reels, and YouTube Shorts "
@@ -179,7 +178,7 @@ with tab2:
                             {"role": "system", "content": system_prompt},
                             {"role": "user", "content": user_prompt}
                         ],
-                        model="llama3-70b-8192",  # Standard stable high-capacity inference engine token tracking
+                        model="gpt-4o-mini",  # Lightning fast and hyper cost-efficient model choice
                         temperature=0.7
                     )
                     
@@ -204,10 +203,10 @@ with tab3:
     st.markdown("Upload your video file to burn clean, styled mobile titles automatically.")
     
     # 1. LIVE SECURITY API KEY VALIDATION CHANNELS
-    GROQ_API_KEY = st.secrets.get("GROQ_API_KEY", os.environ.get("GROQ_API_KEY", ""))
+    OPENAI_API_KEY = st.secrets.get("OPENAI_API_KEY", os.environ.get("OPENAI_API_KEY", ""))
     
-    if not GROQ_API_KEY:
-        st.error("🔑 **System Configuration Missing:** Please set your `GROQ_API_KEY` in your Streamlit Secrets panel to enable video features.")
+    if not OPENAI_API_KEY:
+        st.error("🔑 **System Configuration Missing:** Please set your `OPENAI_API_KEY` in your Streamlit Secrets panel to enable video features.")
     
     # Vertical stacked video style parameter configs
     font_style = st.selectbox("🔤 Font Type", ["Impact", "Arial", "Trebuchet MS"])
@@ -216,7 +215,7 @@ with tab3:
         
     uploaded_file = st.file_uploader("Upload Video (MP4)", type=["mp4"], key="video_uploader_field")
     
-    if uploaded_file is not None and GROQ_API_KEY:
+    if uploaded_file is not None and OPENAI_API_KEY:
         if st.button("🔥 Burn Custom Subtitles"):
             
             # STAGE 1 CRITICAL THREAD-SAFETY FIX: Generate a unique folder workspace per user execution block
@@ -233,16 +232,16 @@ with tab3:
                 with open(input_path, "wb") as f:
                     f.write(uploaded_file.read())
                     
-                # STAGE 3 PERFORMANCE UPGRADE: Fast API-driven Cloud Transcription Engine
-                with st.spinner("⚡ Step 1: Transcribing speech instantly via Cloud Engine..."):
-                    from groq import Groq
-                    client = Groq(api_key=GROQ_API_KEY)
+                # STAGE 3 PERFORMANCE UPGRADE: Fast API-driven Cloud Transcription Engine via OpenAI
+                with st.spinner("⚡ Step 1: Transcribing speech instantly via OpenAI Cloud..."):
+                    from openai import OpenAI
+                    client = OpenAI(api_key=OPENAI_API_KEY)
                     
                     with open(input_path, "rb") as video_file:
                         transcription = client.audio.transcriptions.create(
                             file=video_file,
-                            model="whisper-large-v3",
-                            response_format="srt", # Request native SRT caption styling blocks directly from cloud
+                            model="whisper-1",
+                            response_format="srt", # Request native SRT caption styling blocks directly from OpenAI cloud
                             prompt="This audio contains Kenyan English, Swahili, and Nairobi Sheng slang like hustler, matatu, baze, wapi, rada, form." # Dynamic localization engine seed context
                         )
                     
@@ -282,4 +281,3 @@ with tab3:
                 # Cleanup: Securely drop file traces out of physical disk structures instantly
                 if os.path.exists(working_dir):
                     shutil.rmtree(working_dir)
-
