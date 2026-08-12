@@ -30,7 +30,7 @@ with tab1:
                 
                 # YOUR TOGETHER AI API KEY CONFIGURATION
                 # Paste your actual secret API key token string between the quotes below
-                API_KEY = "PASTE_YOUR_TOGETHER_AI_API_KEY_HERE"
+                API_KEY = "key_CdxsUcB4BWgpRPUYBk2xC"
                 
                 url = "https://together.xyz"
                 headers = {
