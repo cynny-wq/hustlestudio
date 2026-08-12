@@ -46,7 +46,8 @@ with tab1:
                 
                 if video_url:
                     # Render the crisp video directly to the user's mobile or computer browser layout screen
-                    st.video(video_url)
+                   st.video(video_url, format="video/mp4", start_time=0, loop=True, autoplay=True)
+
                     st.caption("💡 Tip for creators: You can download this custom background layout file right from the video player settings dropdown icon menu box panel window.")
 
 # ==========================================
