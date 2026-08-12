@@ -24,15 +24,26 @@ with tab1:
         if not video_prompt.strip():
             st.warning("⚠️ Please type an animation prompt first.")
         else:
-            with st.spinner("🎨 Designing AI animation frames..."):
+         with st.spinner("🎨 Designing AI animation frames... This takes about 15 seconds."):
                 frames = []
-                # Clean prompt for URL processing
-                clean_prompt = requests.utils.quote(video_prompt.strip())
                 
-                # Generate 15 distinct morphing frames using a public free AI generator seed matrix
-                for i in range(15):
-                    # We slightly change the seed number to create an incremental movement effect
-                    img_url = f"https://pollinations.ai{clean_prompt}?width=480&height=480&seed={100 + i}&nofeed=true"
+                # FIX: Use standard urllib quoting to handle long sentences properly
+                import urllib.parse
+                clean_prompt = urllib.parse.quote(video_prompt.strip())
+                
+                # We will generate 8 high-quality animation frames to prevent timeout blips
+                for i in range(8):
+                    img_url = f"https://pollinations.ai{clean_prompt}?width=512&height=512&seed={200 + i}&enhance=false"
+                    try:
+                        resp = requests.get(img_url, timeout=15)
+                        if resp.status_code == 200:
+                            arr = np.asarray(bytearray(resp.content), dtype=np.uint8)
+                            img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+                            if img is not None:
+                                frames.append(img)
+                    except:
+                        pass
+
                     try:
                         resp = requests.get(img_url, timeout=10)
                         if resp.status_code == 200:
