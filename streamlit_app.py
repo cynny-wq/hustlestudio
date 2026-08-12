@@ -2,10 +2,8 @@ import streamlit as st
 import whisper
 import os
 import subprocess
-import requests
 import cv2
 import numpy as np
-import urllib.parse
 
 st.set_page_config(page_title="HustleStudio Suite", page_icon="🚀", layout="centered")
 st.title("🚀 HustleStudio Suite")
@@ -15,68 +13,63 @@ st.markdown("Standalone digital tools designed to help Kenyan content creators g
 tab1, tab2, tab3 = st.tabs(["🎨 Tool 1: AI Animation Gen", "💡 Tool 2: Viral Hooks", "🎬 Tool 3: Caption King"])
 
 # ==========================================
-# TOOL 1: BULLETPROOF AI ANIMATION GENERATOR
+# TOOL 1: 100% LOCAL STANDALONE GENERATOR
 # ==========================================
 with tab1:
     st.subheader("🎨 Tool 1: AI Video & Animation Generator")
-    st.markdown("Type a detailed prompt to generate a smooth high-resolution AI video animation.")
+    st.markdown("Type any prompt. The engine creates an automated mathematical visual loop locally.")
     
-    video_prompt = st.text_input("Describe the animation you want:", placeholder="Type a punchy prompt or long description...", key="animation_prompt_field")
+    video_prompt = st.text_input("Describe the animation layout details:", placeholder="Type a prompt to initialize the visual seed...", key="animation_prompt_field")
     
     if st.button("🚀 Generate AI Animation"):
         if not video_prompt.strip():
             st.warning("⚠️ Please type an animation prompt first.")
         else:
-            with st.spinner("🎨 Processing text structure and generating video..."):
+            with st.spinner("🎨 Compiling independent pixel layers into video container..."):
                 
-                # 🧠 PROMPT CONDENSER AUTOMATION
-                # Split long sentences and take the most descriptive keywords to avoid API server timeout
-                words = video_prompt.strip().split()
-                if len(words) > 5:
-                    # Take the first 5 core conceptual keywords
-                    optimized_prompt = " ".join(words[:5])
-                else:
-                    optimized_prompt = video_prompt.strip()
+                # Generate a unique color configuration palette matrix using the user's prompt text length
+                seed_value = sum(ord(char) for char in video_prompt.strip()) % 256
                 
-                # Safe url parsing format handling for the optimized text string
-                clean_prompt = urllib.parse.quote(optimized_prompt)
-                img_url = f"https://pollinations.ai{clean_prompt}?width=512&height=512&nologo=true"
+                # Build an array containing 24 fluid animated frame matrices
+                width, height = 512, 512
+                frames = []
                 
-                try:
-                    # Set a robust 30-second window to pull the asset matrix safely
-                    resp = requests.get(img_url, timeout=30)
-                    if resp.status_code == 200:
-                        arr = np.asarray(bytearray(resp.content), dtype=np.uint8)
-                        master_frame = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+                for f in range(24):
+                    # Compile a base background canvas layout pattern
+                    frame = np.zeros((height, width, 3), dtype=np.uint8)
+                    
+                    # Compute fluid dynamic wave patterns across individual pixel fields
+                    for r in range(0, height, 4):
+                        dynamic_wave = int(128 + 127 * np.sin((r + f * 10) * 0.05))
+                        color_mix = (dynamic_wave, (seed_value * 2) % 256, (dynamic_wave + seed_value) % 256)
+                        cv2.line(frame, (0, r), (width, r), color_mix, 4)
                         
-                        if master_frame is not None:
-                            height, width, layers = master_frame.shape
-                            video_name = "ai_generated_animation.mp4"
-                            
-                            # Build a clean 3-second animated container video file
-                            fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-                            video = cv2.VideoWriter(video_name, fourcc, 10, (width, height))
-                            
-                            for i in range(30): 
-                                video.write(master_frame)
-                            video.release()
-                            
-                            # Convert container profile via FFmpeg to work perfectly on Android and Safari browsers
-                            final_ready_video = "final_animation.mp4"
-                            os.system(f"ffmpeg -i {video_name} -vcodec libx264 -acodec aac {final_ready_video} -y")
-                            
-                            if os.path.exists(final_ready_video):
-                                st.success("✨ Your AI Animation has been generated successfully!")
-                                with open(final_ready_video, "rb") as file:
-                                    st.video(file.read())
-                            else:
-                                st.error("❌ Conversion frame block failed.")
-                        else:
-                            st.error("❌ Image matrix data corrupt. Please try hitting generate again.")
-                    else:
-                        st.error("⚠️ AI server response error. Try hitting generate again.")
-                except Exception as e:
-                    st.error("❌ Request timed out. The free public server is busy. Hit generate again!")
+                    # Inject a central orbital shape structure layer to track visual motion pacing
+                    center_x = int(width / 2 + 50 * np.cos(f * 0.2))
+                    center_y = int(height / 2 + 50 * np.sin(f * 0.2))
+                    cv2.circle(frame, (center_x, center_y), 60, ((seed_value + 100) % 256, 255, 255), -1)
+                    
+                    frames.append(frame)
+                
+                # Save data array objects natively into a streamable MP4 format container
+                video_name = "local_matrix_animation.mp4"
+                fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+                video = cv2.VideoWriter(video_name, fourcc, 12, (width, height)) # 12 frames per second
+                
+                for frame in frames:
+                    video.write(frame)
+                video.release()
+                
+                # Convert profile code using FFmpeg to work perfectly on any device mobile screen
+                final_ready_video = "final_animation.mp4"
+                os.system(f"ffmpeg -i {video_name} -vcodec libx264 -acodec aac {final_ready_video} -y")
+                
+                if os.path.exists(final_ready_video):
+                    st.success("✨ Your standalone visual loop animation has been generated successfully!")
+                    with open(final_ready_video, "rb") as file:
+                        st.video(file.read())
+                else:
+                    st.error("❌ Conversion frame block failed.")
 
 # ==========================================
 # TOOL 2: KENYAN VIRAL HOOKS
