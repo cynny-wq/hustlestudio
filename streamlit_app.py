@@ -35,7 +35,7 @@ if not st.session_state.payment_unlocked:
     if st.button("🔓 Verify & Activate Suite"):
         try:
             # Replace the link below with your actual Google Sheets CSV Publish link
-            sheet_csv_url = "PASTE_YOUR_GOOGLE_SHEETS_CSV_LINK_HERE"
+            sheet_csv_url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT73hZNiNltEbq8LwrJjr8gXbrgeSbAHlaMKvtkb3Ahja9lxsIGeybwJz8CJ7fQ_Qibee2D3h-EKV-i/pub?output=csv"
             
             # Read your active spreadsheet from the cloud instantly
             df = pd.read_csv(sheet_csv_url)
