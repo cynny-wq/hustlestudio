@@ -27,27 +27,36 @@ with tab1:
         if not video_prompt.strip():
             st.warning("⚠️ Please type an animation prompt first.")
         else:
-            with st.spinner("🎨 Generating high-resolution AI frames... This takes a few seconds."):
-                # Safe url parsing format handling for very long text strings
-                clean_prompt = urllib.parse.quote(video_prompt.strip())
-                img_url = f"https://pollinations.ai{clean_prompt}?width=512&height=512&nologo=true&enhance=true"
+            with st.spinner("🎨 Processing text structure and generating video..."):
+                
+                # 🧠 PROMPT CONDENSER AUTOMATION
+                # Split long sentences and take the most descriptive keywords to avoid API server timeout
+                words = video_prompt.strip().split()
+                if len(words) > 5:
+                    # Take the first 5 core conceptual keywords
+                    optimized_prompt = " ".join(words[:5])
+                else:
+                    optimized_prompt = video_prompt.strip()
+                
+                # Safe url parsing format handling for the optimized text string
+                clean_prompt = urllib.parse.quote(optimized_prompt)
+                img_url = f"https://pollinations.ai{clean_prompt}?width=512&height=512&nologo=true"
                 
                 try:
-                    resp = requests.get(img_url, timeout=20)
+                    # Set a robust 30-second window to pull the asset matrix safely
+                    resp = requests.get(img_url, timeout=30)
                     if resp.status_code == 200:
                         arr = np.asarray(bytearray(resp.content), dtype=np.uint8)
                         master_frame = cv2.imdecode(arr, cv2.IMREAD_COLOR)
                         
                         if master_frame is not None:
-                            st.text("🎬 Compiling matrix layers into streamable video container...")
                             height, width, layers = master_frame.shape
                             video_name = "ai_generated_animation.mp4"
                             
-                            # Build a clean 3-second animated panning pacing matrix loop
+                            # Build a clean 3-second animated container video file
                             fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-                            video = cv2.VideoWriter(video_name, fourcc, 10, (width, height)) # 10 frames per second
+                            video = cv2.VideoWriter(video_name, fourcc, 10, (width, height))
                             
-                            # Programmatic animation pacing loop
                             for i in range(30): 
                                 video.write(master_frame)
                             video.release()
@@ -65,7 +74,7 @@ with tab1:
                         else:
                             st.error("❌ Image matrix data corrupt. Please try hitting generate again.")
                     else:
-                        st.error("⚠️ AI server response error. Try shortening your text block slightly.")
+                        st.error("⚠️ AI server response error. Try hitting generate again.")
                 except Exception as e:
                     st.error("❌ Request timed out. The free public server is busy. Hit generate again!")
 
@@ -98,6 +107,7 @@ with tab3:
         text_position = st.selectbox("📍 Position", ["Bottom Center", "Middle Center", "Top Center"])
         
     uploaded_file = st.file_uploader("Upload Video (MP4)", type=["mp4"], key="video_uploader_field")
+
 
 
 
