@@ -49,8 +49,9 @@ if not st.session_state.payment_unlocked:
                 st.rerun()
             else:
                 st.error("❌ Transaction code not found. If you just sent the payment, please allow 2 minutes for activation.")
-        except Exception as e:
-            st.error("⚠️ System verification glitch. Please try again in a few moments.")
+               except Exception as e:
+            st.error(f"⚠️ System verification glitch. Error details: {str(e)}")
+
             
     st.stop() # Prevents users from seeing your tools unless unlocked
 
