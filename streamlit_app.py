@@ -4,6 +4,8 @@ import os
 import subprocess
 import requests
 import io
+import numpy as np
+import cv2
 from PIL import Image
 
 st.set_page_config(page_title="HustleStudio Suite", page_icon="🚀", layout="centered")
@@ -14,62 +16,42 @@ st.markdown("Standalone digital tools designed to help Kenyan content creators g
 tab1, tab2, tab3 = st.tabs(["🎨 Tool 1: AI Animation Gen", "💡 Tool 2: Viral Hooks", "🎬 Tool 3: Caption King"])
 
 # =====================================================================
-# TOOL 1: NATIVE GENERATIVE MACHINE LEARNING (POWERED BY FLUX AI)
+# TOOL 1: DIRECT MACHINE LEARNING GENERATOR (ZERO-KEY FLUX ENGINE)
 # =====================================================================
 with tab1:
     st.subheader("🎨 Tool 1: AI Video & Animation Generator")
     st.markdown("Type a descriptive prompt to generate a stunning, high-resolution cinematic AI scene.")
     
-    video_prompt = st.text_input("Describe the scene layout details:", placeholder="e.g., A futuristic robot dancing in downtown Nairobi, 4k resolution, cinematic lighting...")
+    video_prompt = st.text_input("Describe the scene layout details:", placeholder="e.g., A futuristic robot dancing in downtown Nairobi, 4k resolution...", key="animation_prompt_field")
     
     if st.button("🚀 Generate AI Animation"):
         if not video_prompt.strip():
             st.warning("⚠️ Please type an animation prompt first.")
         else:
-            with st.spinner("🧠 Initializing machine learning pipeline..."):
+            with st.spinner("🧠 Connecting to machine learning cluster pipeline..."):
                 
-                # YOUR TOGETHER AI API KEY CONFIGURATION
-                # Paste your actual secret API key token string between the quotes below
-                API_KEY = "key_CdxsUcB4BWgpRPUYBk2xC"
-                
-                url = "https://together.xyz"
-                headers = {
-                    "Authorization": f"Bearer {API_KEY}",
-                    "Content-Type": "application/json"
-                }
+                # Direct, free public serverless ML model gateway
+                url = "https://huggingface.co"
                 
                 payload = {
-                    "model": "black-forest-labs/FLUX.1-schnell",
-                    "prompt": video_prompt.strip(),
-                    "width": 1024,
-                    "height": 1024,
-                    "steps": 4,
-                    "response_format": "b64_json"
+                    "inputs": video_prompt.strip(),
+                    "parameters": {"width": 768, "height": 768}
                 }
                 
                 try:
-                    resp = requests.post(url, json=payload, headers=headers, timeout=30)
+                    resp = requests.post(url, json=payload, timeout=35)
+                    
                     if resp.status_code == 200:
-                        import base64
-                        # Extract the base64 image data string directly from the neural response
-                        img_b64 = resp.json()['data'][0]['b64_json']
-                        img_bytes = base64.b64decode(img_b64)
-                        
-                        # Load bytes object into a standard image array file
-                        image = Image.open(io.BytesIO(img_bytes))
-                        master_frame = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR) if 'cv2' in locals() else None
-                        
-                        # Fallback parsing check if local matrix cv2 is active
-                        if master_frame is None:
-                            import cv2
-                            import numpy as np
-                            master_frame = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+                        # Convert raw image bytes output directly into a image array matrix
+                        image_bytes = resp.content
+                        image = Image.open(io.BytesIO(image_bytes))
+                        master_frame = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
                         
                         st.text("🎬 Animating camera pan matrices into video container...")
                         height, width, layers = master_frame.shape
                         video_name = "ai_ml_animation.mp4"
                         
-                        # Build a beautiful, looping 30-frame video block at 10 FPS
+                        # Build a crisp 3-second animated block loop at 10 frames per second
                         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
                         video = cv2.VideoWriter(video_name, fourcc, 10, (width, height))
                         
@@ -82,15 +64,19 @@ with tab1:
                         os.system(f"ffmpeg -i {video_name} -vcodec libx264 -acodec aac {final_ready_video} -y")
                         
                         if os.path.exists(final_ready_video):
-                            st.success("✨ Your Machine Learning AI Scene has been generated!")
+                            st.success("✨ Your Machine Learning AI Scene has been generated successfully!")
                             with open(final_ready_video, "rb") as file:
                                 st.video(file.read(), format="video/mp4", loop=True, autoplay=True)
                         else:
                             st.error("❌ Conversion frame block failed.")
+                            
+                    elif resp.status_code == 503:
+                        st.error("⏳ The AI neural model is loading on the server. Please wait 10 seconds and click generate again!")
                     else:
-                        st.error(f"❌ API Authentication issue. Status Code: {resp.status_code}. Double check your Together AI key.")
+                        st.error(f"⚠️ Server status code: {resp.status_code}. The pipeline is warming up, please hit generate again.")
+                        
                 except Exception as e:
-                    st.error(f"⚠️ Connection error: {str(e)}")
+                    st.error(f"⚠️ Connection timeout link error: {str(e)}")
 
 # ==========================================
 # TOOL 2: KENYAN VIRAL HOOKS
