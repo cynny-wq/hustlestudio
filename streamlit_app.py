@@ -207,20 +207,18 @@ if workspace_selection == "🧠 Strategy Studio":
         with st.expander("📲 3. Social Media Optimization Kit (Caption & Tags)", expanded=True):
             st.text_area("Copy Caption Pack:", value=st.session_state.workspace_data["captions"], height=120)
 # ==========================================
-# 5. MODULE 2: CAPTION KING STUDIO (FIXED DOWNLOAD VIEW)
+# 5. MODULE 2: CAPTION KING STUDIO (REAL EDITING ENGINE)
 # ==========================================
 elif workspace_selection == "🎬 Caption King Studio":
     st.title("🎬 Caption King Studio")
     st.markdown("Burn stylized, high-retention subtitles directly into your short-form video assets.")
     
-    # Initialize a memory key for tracking processed videos if it doesn't exist
     if "processed_video_data" not in st.session_state.workspace_data:
         st.session_state.workspace_data["processed_video_data"] = None
 
     if "free_captions_left" not in st.session_state.workspace_data:
         st.session_state.workspace_data["free_captions_left"] = 3
 
-    # Live balance tracking alert metrics
     trials_left = st.session_state.workspace_data["free_captions_left"]
     if trials_left > 0:
         st.success(f"🎁 **Free Trial Active:** You have **{trials_left} out of 3** free caption generations left!")
@@ -230,42 +228,101 @@ elif workspace_selection == "🎬 Caption King Studio":
 
     uploaded_video = st.file_uploader("Upload your raw MP4 video clip (Max 25MB)", type=["mp4", "mov"])
     
-    # If the user uploads a completely new file, clear the old download button memory
-    if uploaded_video is not None:
-        if st.session_state.workspace_data["processed_video_data"] is not None:
-            # Check if it's a fresh file being dropped in
-            pass
-    else:
+    if uploaded_video is None:
         st.session_state.workspace_data["processed_video_data"] = None
 
     col1, col2, col3 = st.columns(3)
     with col1:
         font_style = st.selectbox("Subtitle Font", ["Impact Bold", "Montserrat ExtraBold", "Sheng Modern"])
     with col2:
-        caption_pos = st.selectbox("Text Position", ["Center", "Lower Third", "Top Drop"])
+        caption_pos = st.selectbox("Text Position", ["Lower Third", "Center", "Top Drop"])
     with col3:
         accent_color = st.color_picker("Accent Highlight Color", "#FF4B4B")
         
     if st.button("🎬 Run Subtitle Generation"):
         if uploaded_video is not None:
             if trials_left > 0:
-                with st.spinner("⚡ Processing video frames and auto-aligning subtitles..."):
-                    # Save the uploaded file bytes directly into memory so it stays visible
-                    st.session_state.workspace_data["processed_video_data"] = uploaded_video.getvalue()
-                    
-                    # Deduct one generation point from local memory safely
-                    st.session_state.workspace_data["free_captions_left"] -= 1
-                    st.rerun()
+                with st.spinner("🧠 Writing and burning subtitles into video layers (this takes a few seconds)..."):
+                    try:
+                        import tempfile
+                        from moviepy.editor import VideoFileClip, TextClip, CompositeVideoClip
+                        
+                        # 1. Save uploaded file bytes safely to a temporary file
+                        with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as temp_input:
+                            temp_input.write(uploaded_video.read())
+                            temp_input_path = temp_input.name
+
+                        # 2. Load the video track into MoviePy
+                        video = VideoFileClip(temp_input_path)
+                        
+                        # 3. Create a dynamic subtitle text overlay matching your selections
+                        # Pulls topic script from Tab 1 to use as subtitle text fallback
+                        subtitle_text = "Hustle Studio Content"
+                        if st.session_state.workspace_data["current_topic"]:
+                            subtitle_text = f"Siri ya {st.session_state.workspace_data['current_topic']} Kenya!"
+
+                        # Determine vertical position layout metric
+                        y_placement = "bottom"
+                        if caption_pos == "Center":
+                            y_placement = "center"
+                        elif caption_pos == "Top Drop":
+                            y_placement = "top"
+
+                        # Build the text render clip layer
+                        txt_clip = TextClip(
+                            subtitle_text, 
+                            fontsize=32, 
+                            color='white', 
+                            bg_color=accent_color,
+                            size=(video.w - 40, None),
+                            method='caption'
+                        )
+                        
+                        # Set text parameters to display continuously across a 5-second short clip window
+                        txt_clip = txt_clip.set_pos((20, y_placement)).set_duration(min(5, video.duration))
+
+                        # 4. Composite the layers together into a new output
+                        final_video = CompositeVideoClip([video, txt_clip])
+                        
+                        # 5. Render out back to an output path container
+                        temp_output_path = tempfile.mktemp(suffix=".mp4")
+                        final_video.write_videofile(
+                            temp_output_path, 
+                            codec="libx264", 
+                            audio_codec="aac",
+                            logger=None # Suppress massive internal shell processing printouts
+                        )
+
+                        # 6. Read the newly captioned file bytes back into state memory
+                        with open(temp_output_path, "rb") as f:
+                            st.session_state.workspace_data["processed_video_data"] = f.read()
+
+                        # Clean up temporary disk files to avoid container size leaks
+                        video.close()
+                        final_video.close()
+                        os.unlink(temp_input_path)
+                        os.unlink(temp_output_path)
+
+                        # Deduct one generation credit point from storage balance
+                        st.session_state.workspace_data["free_captions_left"] -= 1
+                        st.rerun()
+
+                    except Exception as e:
+                        st.error(f"❌ Video Processing System Error: {str(e)}")
+                        st.info("💡 Note: Running video text layers requires image utilities installed on your system engine host.")
             else:
                 st.warning("⚠️ Access Denied: Please authorize a pricing plan in the Monetization Portal to process this asset.")
         else:
             st.error("❌ Please upload a valid MP4 file container before starting the rendering engine.")
 
-    # PERSISTENT RENDER LAYER: This stays on screen even after st.rerun()
+    # PERSISTENT RENDER LAYER
     if st.session_state.workspace_data["processed_video_data"] is not None:
         st.markdown("---")
-        st.success("🎉 Video rendered successfully using your free trial credit!")
+        st.success("🎉 Subtitles burned directly into your video frames successfully!")
         st.balloons()
+        
+        # Display video preview screen on dashboard interface
+        st.video(st.session_state.workspace_data["processed_video_data"])
         
         st.info("📦 Click below to download your captioned media asset container:")
         st.download_button(
