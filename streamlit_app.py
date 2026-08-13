@@ -207,7 +207,7 @@ if workspace_selection == "🧠 Strategy Studio":
         with st.expander("📲 3. Social Media Optimization Kit (Caption & Tags)", expanded=True):
             st.text_area("Copy Caption Pack:", value=st.session_state.workspace_data["captions"], height=120)
 # ==========================================
-# 5. MODULE 2: CAPTION KING STUDIO (SYNCED AUDIO & CAPTIONS ENGINE)
+# 5. MODULE 2: CAPTION KING STUDIO (TOTAL AUDIO & CAPTION SYNC)
 # ==========================================
 elif workspace_selection == "🎬 Caption King Studio":
     st.title("🎬 Caption King Studio")
@@ -242,7 +242,7 @@ elif workspace_selection == "🎬 Caption King Studio":
     if st.button("🎬 Run Subtitle Generation"):
         if uploaded_video is not None:
             if trials_left > 0:
-                with st.spinner("🧠 Transcribing speech and syncing original audio tracking..."):
+                with st.spinner("🧠 Transcribing speech and building audio sync pipeline..."):
                     try:
                         import tempfile
                         import os
@@ -269,7 +269,7 @@ elif workspace_selection == "🎬 Caption King Studio":
                         if fps == 0 or np.isnan(fps):
                             fps = 30.0
 
-                        # Create a clean temporary background file path for the silent subtitled video
+                        # Create a clean temporary background file path for the text track
                         temp_silent_video_path = tempfile.mktemp(suffix=".mp4")
                         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
                         out = cv2.VideoWriter(temp_silent_video_path, fourcc, fps, (width, height))
@@ -329,26 +329,27 @@ elif workspace_selection == "🎬 Caption King Studio":
                         cap.release()
                         out.release()
 
-                        # 5. RE-SYNC AUDIO PIPELINE USING FFMPEG
-                        # Pulls raw audio channel from the original uploaded video and binds it directly onto the subtitled copy
+                        # 5. FIXED RE-SYNC AUDIO PIPELINE WITH FULL TRANSCODING
+                        # Re-encodes the newly drawn video frames to guarantee browser compatibility
                         temp_final_mux_path = tempfile.mktemp(suffix=".mp4")
                         
                         ffmpeg_cmd = [
                             "ffmpeg", "-y",
-                            "-i", temp_silent_video_path, # Input 0: Captioned silent track
+                            "-i", temp_silent_video_path, # Input 0: Silent subtitled video source
                             "-i", temp_input_path,        # Input 1: Original audio track source
-                            "-map", "0:v:0",               # Pick video from Input 0
-                            "-map", "1:a:0?",              # Pick audio from Input 1 (the question mark handles audio-less clips gracefully)
-                            "-c:v", "copy",                # Stream copy video format immediately without re-rendering delays
+                            "-map", "0:v:0",               # Target video from Input 0
+                            "-map", "1:a:0?",              # Target audio from Input 1
+                            "-c:v", "libx264",             # FIXED: Force layout compression to render elements across web view
+                            "-pix_fmt", "yuv420p",         # Guarantees playback on all mobile devices and web browsers
                             "-c:a", "aac",                 # Compress sound channel cleanly to universal AAC web standard
-                            "-shortest",                   # Align video timelines to match length properties
+                            "-shortest",                   
                             temp_final_mux_path
                         ]
                         
                         # Execute the background system process thread safely
                         subprocess.run(ffmpeg_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
 
-                        # 6. Read the newly audio-synced video track bytes back into active state memory
+                        # 6. Read the newly synced video track bytes back into active state memory
                         with open(temp_final_mux_path, "rb") as f:
                             st.session_state.workspace_data["processed_video_data"] = f.read()
 
@@ -382,6 +383,7 @@ elif workspace_selection == "🎬 Caption King Studio":
             file_name="hustlestudio_captioned.mp4",
             mime="video/mp4"
         )
+
 
 
 # ==========================================
