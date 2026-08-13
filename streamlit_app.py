@@ -216,6 +216,6 @@ with tab3:
         ["TikTok", "Instagram Reels", "YouTube Shorts", "Facebook Reels"]
     )
 
-    # FIXED: Split layout into distinct structural blocks to resolve SyntaxError
+    # Indentation explicitly aligned to separate structural levels safely
     if st.button("👑 Compile Viral Captions"):
         if script_context.strip():
