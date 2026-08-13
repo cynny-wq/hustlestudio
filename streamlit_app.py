@@ -207,7 +207,7 @@ if workspace_selection == "🧠 Strategy Studio":
         with st.expander("📲 3. Social Media Optimization Kit (Caption & Tags)", expanded=True):
             st.text_area("Copy Caption Pack:", value=st.session_state.workspace_data["captions"], height=120)
 # ==========================================
-# 5. MODULE 2: CAPTION KING STUDIO (BROWSER COMPATIBLE ENGINE)
+# 5. MODULE 2: CAPTION KING STUDIO (STABLE HIGH-VISIBILITY ENGINE)
 # ==========================================
 elif workspace_selection == "🎬 Caption King Studio":
     st.title("🎬 Caption King Studio")
@@ -262,12 +262,9 @@ elif workspace_selection == "🎬 Caption King Studio":
                         if fps == 0 or np.isnan(fps):
                             fps = 30.0
 
-                        # 3. Create a clean background output path setup
+                        # 3. Create a clean background output path setup using universal standard codec
                         temp_output_path = tempfile.mktemp(suffix=".mp4")
-                        
-                        # FIXED: Swapped 'mp4v' to 'avc1' (H.264) container encoding format
-                        # This guarantees the text layers show up inside web browsers
-                        fourcc = cv2.VideoWriter_fourcc(*'avc1')
+                        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
                         out = cv2.VideoWriter(temp_output_path, fourcc, fps, (width, height))
 
                         # Determine text string based on Strategy Studio choices
@@ -285,11 +282,14 @@ elif workspace_selection == "🎬 Caption King Studio":
                             if not ret:
                                 break
                             
-                            # Calculate dynamic scaling values based on the video's total height resolution
-                            font_scale = max(1.2, height / 500.0)
-                            thickness = max(2, int(font_scale * 2))
+                            # Universal bold font face setup
+                            font_face = cv2.FONT_HERSHEY_SIMPLEX
                             
-                            font_face = cv2.FONT_HERSHEY_DUPLEX
+                            # Calculate dynamic scaling values based on the video's total width resolution
+                            font_scale = max(1.0, width / 450.0) 
+                            thickness = max(2, int(font_scale * 2.5))
+                            
+                            # Use OpenCV's built-in engine to measure font bounding coordinates perfectly
                             (text_w, text_h), baseline = cv2.getTextSize(subtitle_text, font_face, font_scale, thickness)
                             
                             # Setup precise alignment configurations
