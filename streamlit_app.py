@@ -1,3 +1,6 @@
+
+
+
 import streamlit as st
 import os
 import tempfile
@@ -650,15 +653,15 @@ if page == "🎙️ AI Subtitles":
 </div>
 """, unsafe_allow_html=True)
 
-    OPENAI_API_KEY = st.secrets.get(
-        "OPENAI_API_KEY",
-        os.environ.get("OPENAI_API_KEY", "")
+    st.success(
+        "🆓 **Free transcription:** Hustle Studio uses the open-source "
+        "Whisper model locally for subtitles. No OpenAI API key is required."
     )
 
-    if not OPENAI_API_KEY:
-        st.warning(
-            "🔑 Add your OPENAI_API_KEY in Streamlit Secrets to enable AI transcription."
-        )
+    st.caption(
+        "The first transcription may take longer because the Whisper model "
+        "needs to download and load on the server."
+    )
 
     subtitle_video = st.file_uploader(
         "📤 Upload your video",
@@ -691,17 +694,13 @@ if page == "🎙️ AI Subtitles":
         )
 
     st.caption(
-        "The video audio is sent to the configured transcription service for processing. "
-        "Keep sensitive/private videos out of the tool unless you are comfortable with that."
+        "Whisper runs locally on the app server. No OpenAI transcription API call is required."
     )
 
     if st.button("🎙️ Generate AI Subtitles", key="generate_ai_subtitles"):
 
         if subtitle_video is None:
             st.error("❌ Please upload a video first.")
-
-        elif not OPENAI_API_KEY:
-            st.error("❌ OpenAI API key is missing.")
 
         elif not has_credit("captions_left"):
             limit_message("caption exports")
@@ -710,14 +709,18 @@ if page == "🎙️ AI Subtitles":
 
             input_path = None
             audio_path = None
-            srt_path = None
             output_path = None
+            ass_path = None
 
             try:
 
                 with st.spinner(
-                    "🎙️ Extracting audio and transcribing your video..."
+                    "🎙️ Loading Whisper and transcribing your video..."
                 ):
+
+                    # Import only when the feature is used so the rest of
+                    # Hustle Studio can start normally.
+                    from faster_whisper import WhisperModel
 
                     with tempfile.NamedTemporaryFile(
                         delete=False,
@@ -726,7 +729,7 @@ if page == "🎙️ AI Subtitles":
                         temp_input.write(subtitle_video.read())
                         input_path = temp_input.name
 
-                    audio_path = tempfile.mktemp(suffix=".mp3")
+                    audio_path = tempfile.mktemp(suffix=".wav")
 
                     extract_audio_cmd = [
                         "ffmpeg",
@@ -735,8 +738,7 @@ if page == "🎙️ AI Subtitles":
                         "-vn",
                         "-ac", "1",
                         "-ar", "16000",
-                        "-codec:a", "libmp3lame",
-                        "-b:a", "64k",
+                        "-c:a", "pcm_s16le",
                         audio_path
                     ]
 
@@ -747,79 +749,72 @@ if page == "🎙️ AI Subtitles":
                         check=True
                     )
 
-                    from openai import OpenAI
+                    # CPU + int8 keeps the free/local version much lighter.
+                    # The model is cached by faster-whisper after first use.
+                    model = WhisperModel(
+                        "tiny",
+                        device="cpu",
+                        compute_type="int8"
+                    )
 
-                    client = OpenAI(api_key=OPENAI_API_KEY)
+                    segments, info = model.transcribe(
+                        audio_path,
+                        beam_size=1,
+                        vad_filter=True,
+                        condition_on_previous_text=False
+                    )
 
-                    with open(audio_path, "rb") as audio_file:
+                    segment_list = list(segments)
 
-                        transcription = client.audio.transcriptions.create(
-                            model="gpt-4o-mini-transcribe",
-                            file=audio_file,
-                            response_format="verbose_json",
-                            timestamp_granularities=["segment"]
-                        )
-
-                    segments = getattr(transcription, "segments", None)
-
-                    if not segments:
+                    if not segment_list:
                         raise RuntimeError(
-                            "The transcription service returned no timed segments."
+                            "No speech was detected in the video."
                         )
-
-                    def segment_value(segment, name, default=None):
-                        if isinstance(segment, dict):
-                            return segment.get(name, default)
-                        return getattr(segment, name, default)
 
                     def srt_timestamp(seconds):
                         seconds = max(0.0, float(seconds or 0.0))
+                        total_ms = int(round(seconds * 1000))
 
-                        hours = int(seconds // 3600)
-                        minutes = int((seconds % 3600) // 60)
-                        secs = int(seconds % 60)
-                        millis = int(round((seconds - int(seconds)) * 1000))
-
-                        if millis == 1000:
-                            secs += 1
-                            millis = 0
-
-                        if secs == 60:
-                            minutes += 1
-                            secs = 0
-
-                        if minutes == 60:
-                            hours += 1
-                            minutes = 0
+                        hours = total_ms // 3600000
+                        total_ms %= 3600000
+                        minutes = total_ms // 60000
+                        total_ms %= 60000
+                        secs = total_ms // 1000
+                        millis = total_ms % 1000
 
                         return (
                             f"{hours:02d}:{minutes:02d}:{secs:02d},"
                             f"{millis:03d}"
                         )
 
+                    transcript_lines = []
                     srt_lines = []
 
-                    for index, segment in enumerate(segments, start=1):
+                    for index, segment in enumerate(segment_list, start=1):
 
-                        start = segment_value(segment, "start", 0)
-                        end = segment_value(segment, "end", start + 2)
-                        text = str(
-                            segment_value(segment, "text", "")
-                        ).strip()
+                        text = str(segment.text).strip()
 
                         if not text:
                             continue
 
+                        start_time = float(segment.start)
+                        end_time = float(segment.end)
+
+                        transcript_lines.append(text)
+
                         srt_lines.extend([
                             str(index),
-                            f"{srt_timestamp(start)} --> {srt_timestamp(end)}",
+                            (
+                                f"{srt_timestamp(start_time)} --> "
+                                f"{srt_timestamp(end_time)}"
+                            ),
                             text,
                             ""
                         ])
 
-                    if not srt_lines:
+                    if not transcript_lines:
                         raise RuntimeError(
-                            "No spoken text was detected in the video."
+                            "Whisper did not return readable speech."
                         )
 
                     with tempfile.NamedTemporaryFile(
@@ -831,9 +826,12 @@ if page == "🎙️ AI Subtitles":
                         srt_file.write("\n".join(srt_lines))
                         srt_path = srt_file.name
 
-                with st.spinner("🎬 Burning captions into your video..."):
+                    hs["subtitle_transcript"] = "\n".join(
+                        transcript_lines
+                    )
 
-                    # Convert the chosen hex color into ASS/FFmpeg format.
+                with st.spinner("🎬 Styling and burning captions..."):
+
                     clean_color = subtitle_color.lstrip("#")
 
                     if len(clean_color) != 6:
@@ -843,7 +841,6 @@ if page == "🎙️ AI Subtitles":
                     gg = clean_color[2:4]
                     bb = clean_color[4:6]
 
-                    # ASS uses BGR order and alpha first.
                     ass_color = f"&H00{bb}{gg}{rr}"
 
                     size_map = {
@@ -884,39 +881,34 @@ Style: HustleStudio,Arial,{font_size},{ass_color},&H00000000,&H00000000,&H990000
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 """
 
-                    # Build ASS events from the same timed transcript.
+                    def ass_timestamp(seconds):
+                        seconds = max(0.0, float(seconds or 0.0))
+
+                        hours = int(seconds // 3600)
+                        minutes = int((seconds % 3600) // 60)
+                        secs = int(seconds % 60)
+                        centiseconds = int(
+                            round((seconds - int(seconds)) * 100)
+                        )
+
+                        if centiseconds >= 100:
+                            secs += 1
+                            centiseconds = 0
+
+                        return (
+                            f"{hours}:{minutes:02d}:{secs:02d}."
+                            f"{centiseconds:02d}"
+                        )
+
                     event_lines = []
 
-                    for segment in segments:
+                    for segment in segment_list:
 
-                        start = segment_value(segment, "start", 0)
-                        end = segment_value(segment, "end", start + 2)
-                        text = str(
-                            segment_value(segment, "text", "")
-                        ).strip()
+                        text = str(segment.text).strip()
 
                         if not text:
                             continue
 
-                        def ass_timestamp(seconds):
-                            seconds = max(0.0, float(seconds or 0.0))
-                            hours = int(seconds // 3600)
-                            minutes = int((seconds % 3600) // 60)
-                            secs = int(seconds % 60)
-                            centiseconds = int(
-                                round((seconds - int(seconds)) * 100)
-                            )
-
-                            if centiseconds >= 100:
-                                secs += 1
-                                centiseconds = 0
-
-                            return (
-                                f"{hours}:{minutes:02d}:{secs:02d}."
-                                f"{centiseconds:02d}"
-                            )
-
-                        # Escape ASS special characters.
                         safe_text = (
                             text
                             .replace("\\", r"\\")
@@ -927,8 +919,8 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 
                         event_lines.append(
                             "Dialogue: 0,"
-                            f"{ass_timestamp(start)},"
-                            f"{ass_timestamp(end)},"
+                            f"{ass_timestamp(segment.start)},"
+                            f"{ass_timestamp(segment.end)},"
                             f"HustleStudio,,0,0,0,,{safe_text}"
                         )
 
@@ -943,11 +935,15 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 
                     output_path = tempfile.mktemp(suffix=".mp4")
 
+                    # Use a simple FFmpeg filter path. Forward slashes are
+                    # required inside the filter expression on Windows.
+                    ass_filter_path = ass_path.replace("\\", "/").replace(":", r"\:")
+
                     burn_cmd = [
                         "ffmpeg",
                         "-y",
                         "-i", input_path,
-                        "-vf", f"ass={ass_path}",
+                        "-vf", f"ass='{ass_filter_path}'",
                         "-map", "0:v:0",
                         "-map", "0:a:0?",
                         "-c:v", "libx264",
@@ -971,19 +967,18 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
                     with open(output_path, "rb") as finished_video:
                         hs["subtitle_video"] = finished_video.read()
 
-                    hs["subtitle_transcript"] = "\n".join(
-                        str(
-                            segment_value(segment, "text", "")
-                        ).strip()
-                        for segment in segments
-                        if str(
-                            segment_value(segment, "text", "")
-                        ).strip()
-                    )
-
                     use_credit("captions_left")
 
-                st.success("🎉 AI subtitles are ready!")
+                st.success(
+                    "🎉 AI subtitles are ready — and this version did not "
+                    "use your OpenAI API key!"
+                )
+
+            except ImportError:
+                st.error(
+                    "❌ faster-whisper is not installed. "
+                    "Add it to requirements.txt and redeploy."
+                )
 
             except FileNotFoundError:
                 st.error(
@@ -992,7 +987,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 
             except subprocess.CalledProcessError:
                 st.error(
-                    "❌ FFmpeg could not process the video. "
+                    "❌ FFmpeg could not process this video. "
                     "Try a standard MP4 file."
                 )
 
@@ -1006,9 +1001,9 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
                 for path in [
                     input_path,
                     audio_path,
-                    srt_path,
                     output_path,
-                    locals().get("ass_path")
+                    ass_path,
+                    locals().get("srt_path")
                 ]:
 
                     if path and os.path.exists(path):
@@ -1017,6 +1012,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
                             os.unlink(path)
                         except Exception:
                             pass
+
 
     if hs.get("subtitle_video"):
 
