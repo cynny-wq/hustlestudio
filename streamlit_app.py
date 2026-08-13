@@ -46,3 +46,51 @@ if "workspace_data" not in st.session_state:
         "captions": "",
         "current_topic": ""
     }
+# ==========================================
+# 3. SIDEBAR NAVIGATION MODEL
+# ==========================================
+st.sidebar.title("🚀 Hustle Studio")
+st.sidebar.markdown("---")
+workspace_selection = st.sidebar.radio(
+    "Navigate Workspace",
+    ["🧠 Strategy Studio", "🎬 Caption King Studio", "👤 Monetization Portal"]
+)
+
+st.sidebar.markdown("---")
+st.sidebar.caption("Current Tier: **Free Strategy Plan**")
+
+# ==========================================
+# 4. MODULE 1: THE UNIFIED STRATEGY STUDIO (INPUTS)
+# ==========================================
+if workspace_selection == "🧠 Strategy Studio":
+    st.subheader("🧠 Strategy Studio")
+    st.markdown("Go from an abstract idea to a complete, localized production roadmap instantly.")
+    
+    # Responsive mobile selection dropdowns
+    col1, col2 = st.columns(2)
+    with col1:
+        niche = st.selectbox(
+            "🎯 Select Video Niche",
+            [
+                "General Hustle & Business", 
+                "Fashion & Thrift (Mitumba/Bales)", 
+                "Real Estate & Housing (Bedsitters/Apartments)", 
+                "Food & Cooking (Pilau/Local Recipes)", 
+                "Tech & Gadget Reviews"
+            ]
+        )
+    with col2:
+        style = st.selectbox(
+            "🎭 Select Delivery Style",
+            [
+                "Comedic / Local Vibe (Sheng Mix)", 
+                "Energetic & Fast-Paced", 
+                "Storytelling & Emotional", 
+                "Educational & Corporate"
+            ]
+        )
+        
+    topic = st.text_input(
+        "💡 What is your video topic? (e.g., Starting a business with KSh 5,000)",
+        value=st.session_state.workspace_data["current_topic"]
+    )
