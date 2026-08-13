@@ -207,7 +207,7 @@ if workspace_selection == "🧠 Strategy Studio":
         with st.expander("📲 3. Social Media Optimization Kit (Caption & Tags)", expanded=True):
             st.text_area("Copy Caption Pack:", value=st.session_state.workspace_data["captions"], height=120)
 # ==========================================
-# 5. MODULE 2: CAPTION KING STUDIO (DYNAMIC TIMELINE CAPTIONS)
+# 5. MODULE 2: CAPTION KING STUDIO (REAL SPEECH-TO-TEXT AUDIO ENGINE)
 # ==========================================
 elif workspace_selection == "🎬 Caption King Studio":
     st.title("🎬 Caption King Studio")
@@ -242,89 +242,90 @@ elif workspace_selection == "🎬 Caption King Studio":
     if st.button("🎬 Run Subtitle Generation"):
         if uploaded_video is not None:
             if trials_left > 0:
-                with st.spinner("🧠 Analyzing video audio track and burning speech subtitles..."):
+                with st.spinner("🧠 Extracting audio track and transcribing speech into text..."):
                     try:
                         import tempfile
                         import os
                         import cv2
                         import numpy as np
+                        import whisper
                         
                         # 1. Save uploaded file bytes to a secure temporary location
                         with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as temp_input:
                             temp_input.write(uploaded_video.read())
                             temp_input_path = temp_input.name
 
-                        # 2. Open the video using OpenCV tracking readers
+                        # 2. Extract and transcribe audio waves using the local Whisper AI base model
+                        # This listens to the actual spoken dialogue inside the uploaded video container
+                        model = whisper.load_model("tiny")
+                        transcription_result = model.transcribe(temp_input_path)
+                        segments = transcription_result.get("segments", [])
+
+                        # 3. Open the video using OpenCV tracking readers
                         cap = cv2.VideoCapture(temp_input_path)
                         width  = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
                         height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
                         fps    = cap.get(cv2.CAP_PROP_FPS)
-                        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
                         if fps == 0 or np.isnan(fps):
                             fps = 30.0
 
-                        # 3. Create a clean background output path setup
+                        # Create clean background output path setup
                         temp_output_path = tempfile.mktemp(suffix=".mp4")
                         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
                         out = cv2.VideoWriter(temp_output_path, fourcc, fps, (width, height))
-
-                        # DYNAMIC TRANSCRIPTION MAPPER:
-                        # Breaks down the generated script into phrases that change every 2-3 seconds across the timeline
-                        caption_timeline = [
-                            "USIWAHI jaribu hii siri Kenya!",
-                            "Mbona hakuna mtu anakuambia ukweli?",
-                            "Hii ndio mistake wasee wengi hufanya...",
-                            "Angalia video hii hadi mwisho ujue mbona!",
-                            "Nifollow sasa hivi upate maujuzi zaidi!"
-                        ]
 
                         # Convert hex color string to BGR format for OpenCV overlay layers
                         hex_color = accent_color.lstrip('#')
                         bg_color_bgr = tuple(int(hex_color[i:i+2], 16) for i in (4, 2, 0))
 
                         frame_index = 0
-                        # 4. Loop over every frame to draw layout text dynamically
+                        # 4. Loop over every frame to burn recognized speech text dynamically based on timeline timestamps
                         while cap.isOpened():
                             ret, frame = cap.read()
                             if not ret:
                                 break
                             
-                            # Calculate active timestamp time in seconds
-                            current_second = int(frame_index / fps)
+                            # Calculate the active video playback time in seconds
+                            current_time_seconds = frame_index / fps
                             
-                            # Automatically rotate the subtitle word string every 2.5 seconds
-                            timeline_position = min(int(current_second / 2.5), len(caption_timeline) - 1)
-                            active_subtitle_text = caption_timeline[timeline_position]
+                            # Find if there is a spoken word segment matched to this exact timestamp
+                            active_subtitle_text = ""
+                            for segment in segments:
+                                if segment["start"] <= current_time_seconds <= segment["end"]:
+                                    active_subtitle_text = segment["text"].strip()
+                                    break
+                            
+                            # Only execute drawing calculations if speech is active on this frame
+                            if active_subtitle_text:
+                                font_face = cv2.FONT_HERSHEY_SIMPLEX
+                                font_scale = max(1.0, width / 450.0) 
+                                thickness = max(2, int(font_scale * 2.5))
+                                
+                                (text_w, text_h), baseline = cv2.getTextSize(active_subtitle_text, font_face, font_scale, thickness)
+                                
+                                x = int((width - text_w) / 2)
+                                
+                                if caption_pos == "Center":
+                                    y = int((height + text_h) / 2)
+                                elif caption_pos == "Top Drop":
+                                    y = int(height * 0.2)
+                                else: 
+                                    y = int(height * 0.75)
 
-                            font_face = cv2.FONT_HERSHEY_SIMPLEX
-                            font_scale = max(1.0, width / 450.0) 
-                            thickness = max(2, int(font_scale * 2.5))
-                            
-                            (text_w, text_h), baseline = cv2.getTextSize(active_subtitle_text, font_face, font_scale, thickness)
-                            
-                            x = int((width - text_w) / 2)
-                            
-                            if caption_pos == "Center":
-                                y = int((height + text_h) / 2)
-                            elif caption_pos == "Top Drop":
-                                y = int(height * 0.2)
-                            else: 
-                                y = int(height * 0.75)
-
-                            # Burn background panel block container layer
-                            pad_x = int(20 * font_scale)
-                            pad_y = int(15 * font_scale)
-                            cv2.rectangle(
-                                frame, 
-                                (x - pad_x, y - text_h - pad_y), 
-                                (x + text_w + pad_x, y + baseline + pad_y), 
-                                bg_color_bgr, 
-                                -1
-                            )
-                            
-                            # Draw high-contrast outline and layout text layers
-                            cv2.putText(frame, active_subtitle_text, (x, y), font_face, font_scale, (0, 0, 0), thickness + 3, cv2.LINE_AA)
-                            cv2.putText(frame, active_subtitle_text, (x, y), font_face, font_scale, (255, 255, 255), thickness, cv2.LINE_AA)
+                                # Burn background block strip matching speech layer dimensions
+                                pad_x = int(20 * font_scale)
+                                pad_y = int(15 * font_scale)
+                                cv2.rectangle(
+                                    frame, 
+                                    (x - pad_x, y - text_h - pad_y), 
+                                    (x + text_w + pad_x, y + baseline + pad_y), 
+                                    bg_color_bgr, 
+                                    -1
+                                )
+                                
+                                # Layer clean text and outlines natively onto the frame graphics
+                                cv2.putText(frame, active_subtitle_text, (x, y), font_face, font_scale, (0, 0, 0), thickness + 3, cv2.LINE_AA)
+                                cv2.putText(frame, active_subtitle_text, (x, y), font_face, font_scale, (255, 255, 255), thickness, cv2.LINE_AA)
                             
                             out.write(frame)
                             frame_index += 1
@@ -332,6 +333,7 @@ elif workspace_selection == "🎬 Caption King Studio":
                         cap.release()
                         out.release()
 
+                        # 5. Lock completed video asset byte layers back into persistent view
                         with open(temp_output_path, "rb") as f:
                             st.session_state.workspace_data["processed_video_data"] = f.read()
 
@@ -351,7 +353,7 @@ elif workspace_selection == "🎬 Caption King Studio":
     # PERSISTENT RENDER LAYER
     if st.session_state.workspace_data["processed_video_data"] is not None:
         st.markdown("---")
-        st.success("🎉 Subtitles burned directly into your video frames successfully!")
+        st.success("🎉 Real speech subtitles transcribed and burned successfully!")
         st.balloons()
         
         st.video(st.session_state.workspace_data["processed_video_data"])
