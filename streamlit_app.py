@@ -111,7 +111,6 @@ with tab2:
         value=st.session_state.selected_hook,
     )
 
-    # NEW: Niche Selector Component
     video_niche = st.selectbox(
         "🎯 Select Video Niche / Category",
         [
@@ -137,11 +136,9 @@ with tab2:
         if active_hook.strip():
             topic = st.session_state.current_topic if st.session_state.current_topic else "this business"
             
-            # Base variables for injection
             script_body = ""
             cta = ""
 
-            # SMART LOCALIZED TEMPLATE LOGIC MACHINE
             if video_niche == "Fashion & Thrift (Mitumba/Bales)":
                 if delivery_style == "Comedic / Local Vibe (Sheng Mix)":
                     script_body = f"Wasee wanadhani kuuza {topic} ni kwenda tu Gikomba asubuhi na kuchagua nguo. Ukweli ni kwamba unapigwa character development na supplier usipochunga!"
@@ -177,7 +174,6 @@ with tab2:
                     script_body = f"Success in {topic} requires consistency. The market shifts daily in East Africa, and those who track data manually are getting left behind."
                     cta = f"Save this video for reference and follow this page for weekly market breakdowns."
 
-            # Structure compiled engine text block
             st.session_state.generated_script = f"""### 🚨 1. HOOK
 "{active_hook}"
 
@@ -220,4 +216,6 @@ with tab3:
         ["TikTok", "Instagram Reels", "YouTube Shorts", "Facebook Reels"]
     )
 
-if st.button("👑 Compile Viral Captions"):if script_context.strip():topic = st.session_state.current_topic if st.session_state.current_topic else "Hustle"# Dynamic hashtag tailoring matching the niche keywordsst.markdown("### 🏆 Your Caption Optimization Package")st.markdown(f"""
+    # FIXED: Split layout into distinct structural blocks to resolve SyntaxError
+    if st.button("👑 Compile Viral Captions"):
+        if script_context.strip():
