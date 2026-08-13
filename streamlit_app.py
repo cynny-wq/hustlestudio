@@ -207,7 +207,7 @@ if workspace_selection == "🧠 Strategy Studio":
         with st.expander("📲 3. Social Media Optimization Kit (Caption & Tags)", expanded=True):
             st.text_area("Copy Caption Pack:", value=st.session_state.workspace_data["captions"], height=120)
 # ==========================================
-# 5. MODULE 2: CAPTION KING STUDIO (STABLE ENGINE)
+# 5. MODULE 2: CAPTION KING STUDIO (FIXED OS IMPORT)
 # ==========================================
 elif workspace_selection == "🎬 Caption King Studio":
     st.title("🎬 Caption King Studio")
@@ -245,6 +245,7 @@ elif workspace_selection == "🎬 Caption King Studio":
                 with st.spinner("🧠 Drawing and burning subtitles into video layers smoothly..."):
                     try:
                         import tempfile
+                        import os  # FIXED: Added missing import here
                         import cv2
                         import numpy as np
                         from PIL import Image, ImageDraw, ImageFont
@@ -283,11 +284,7 @@ elif workspace_selection == "🎬 Caption King Studio":
                             pil_img = Image.fromarray(frame_rgb)
                             draw = ImageDraw.Draw(pil_img)
                             
-                            # Use default font layer scaling to guarantee layout rendering across any device
-                            try:
-                                font = ImageFont.load_default()
-                            except:
-                                font = ImageFont.load_default()
+                            font = ImageFont.load_default()
 
                             # Setup layout placement alignments
                             text_w = len(subtitle_text) * 8
