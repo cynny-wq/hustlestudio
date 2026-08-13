@@ -207,7 +207,7 @@ if workspace_selection == "🧠 Strategy Studio":
         with st.expander("📲 3. Social Media Optimization Kit (Caption & Tags)", expanded=True):
             st.text_area("Copy Caption Pack:", value=st.session_state.workspace_data["captions"], height=120)
 # ==========================================
-# 5. MODULE 2: CAPTION KING STUDIO (SCALED BOLD CAPTIONS)
+# 5. MODULE 2: CAPTION KING STUDIO (BROWSER COMPATIBLE ENGINE)
 # ==========================================
 elif workspace_selection == "🎬 Caption King Studio":
     st.title("🎬 Caption King Studio")
@@ -235,7 +235,7 @@ elif workspace_selection == "🎬 Caption King Studio":
     with col1:
         font_style = st.selectbox("Subtitle Font", ["Impact Bold", "Montserrat ExtraBold", "Sheng Modern"])
     with col2:
-        caption_pos = st.selectbox("Text Position", ["Lower Third", "Center", "Top Drop"])
+        caption_pos = st.selectbox("Text Position", ["Center", "Lower Third", "Top Drop"])
     with col3:
         accent_color = st.color_picker("Accent Highlight Color", "#FF4B4B")
         
@@ -248,7 +248,6 @@ elif workspace_selection == "🎬 Caption King Studio":
                         import os
                         import cv2
                         import numpy as np
-                        from PIL import Image, ImageDraw, ImageFont
                         
                         # 1. Save uploaded file bytes to a secure temporary location
                         with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as temp_input:
@@ -265,7 +264,10 @@ elif workspace_selection == "🎬 Caption King Studio":
 
                         # 3. Create a clean background output path setup
                         temp_output_path = tempfile.mktemp(suffix=".mp4")
-                        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+                        
+                        # FIXED: Swapped 'mp4v' to 'avc1' (H.264) container encoding format
+                        # This guarantees the text layers show up inside web browsers
+                        fourcc = cv2.VideoWriter_fourcc(*'avc1')
                         out = cv2.VideoWriter(temp_output_path, fourcc, fps, (width, height))
 
                         # Determine text string based on Strategy Studio choices
@@ -273,56 +275,52 @@ elif workspace_selection == "🎬 Caption King Studio":
                         if st.session_state.workspace_data["current_topic"]:
                             subtitle_text = f"Siri ya {st.session_state.workspace_data['current_topic']} Kenya!"
 
+                        # Convert hex color string to BGR format for OpenCV overlay layers
+                        hex_color = accent_color.lstrip('#')
+                        bg_color_bgr = tuple(int(hex_color[i:i+2], 16) for i in (4, 2, 0))
+
                         # 4. Loop over every frame to draw text layouts manually
                         while cap.isOpened():
                             ret, frame = cap.read()
                             if not ret:
                                 break
                             
-                            # Convert opencv frame colorspace to Pillow standard
-                            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                            pil_img = Image.fromarray(frame_rgb)
-                            draw = ImageDraw.Draw(pil_img)
+                            # Calculate dynamic scaling values based on the video's total height resolution
+                            font_scale = max(1.2, height / 500.0)
+                            thickness = max(2, int(font_scale * 2))
                             
-                            # DYNAMIC SCALE: Automatically size the text relative to the video height
-                            # This scales font size perfectly for HD (720p/1080p) vertical screens
-                            scaled_font_size = max(24, int(height * 0.045))
+                            font_face = cv2.FONT_HERSHEY_DUPLEX
+                            (text_w, text_h), baseline = cv2.getTextSize(subtitle_text, font_face, font_scale, thickness)
                             
-                            try:
-                                # Safe server fallback path
-                                font = ImageFont.load_default()
-                            except:
-                                font = ImageFont.load_default()
-
-                            # Calculate precise visual text wrap coordinates using PIL metrics
-                            # Bypasses system font limitations safely
-                            text_w = len(subtitle_text) * int(scaled_font_size * 0.55)
-                            text_h = scaled_font_size
-                            
+                            # Setup precise alignment configurations
                             x = int((width - text_w) / 2)
                             
                             if caption_pos == "Center":
-                                y = int((height - text_h) / 2)
+                                y = int((height + text_h) / 2)
                             elif caption_pos == "Top Drop":
-                                y = int(height * 0.15)
+                                y = int(height * 0.2)
                             else: # Lower Third default boundary map
                                 y = int(height * 0.75)
 
-                            # Burn a thick, bold high-retention background box strip around the phrase
-                            pad_x = int(scaled_font_size * 0.4)
-                            pad_y = int(scaled_font_size * 0.2)
-                            draw.rectangle(
-                                [x - pad_x, y - pad_y, x + text_w + pad_x, y + text_h + pad_y], 
-                                fill=accent_color
+                            # Burn a thick high-retention background panel block container layer
+                            pad_x = int(20 * font_scale)
+                            pad_y = int(15 * font_scale)
+                            cv2.rectangle(
+                                frame, 
+                                (x - pad_x, y - text_h - pad_y), 
+                                (x + text_w + pad_x, y + baseline + pad_y), 
+                                bg_color_bgr, 
+                                -1
                             )
                             
-                            # Burn clean bold text layer overlay block inside the bounding area
-                            # Pure Python fallback uses high-contrast text layering
-                            draw.text((x, y), subtitle_text, fill="white", stroke_width=2, stroke_fill="black")
+                            # Draw a high-contrast black stroke border behind the letters for maximum readability
+                            cv2.putText(frame, subtitle_text, (x, y), font_face, font_scale, (0, 0, 0), thickness + 3, cv2.LINE_AA)
+                            
+                            # Burn clean text layer overlay block over the background panel box
+                            cv2.putText(frame, subtitle_text, (x, y), font_face, font_scale, (255, 255, 255), thickness, cv2.LINE_AA)
                             
                             # Write modified frame byte strings back to video container layout
-                            final_frame = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
-                            out.write(final_frame)
+                            out.write(frame)
 
                         cap.release()
                         out.release()
