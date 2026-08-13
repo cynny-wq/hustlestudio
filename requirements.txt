@@ -1,9 +1,8 @@
-streamlit>=1.30.0
-Pillow
+streamlit
+openai
+faster-whisper
 opencv-python-headless
 numpy
-pandas
-requests
 
 
 
