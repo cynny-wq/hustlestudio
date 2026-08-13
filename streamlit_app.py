@@ -203,3 +203,33 @@ if workspace_selection == "🧠 Strategy Studio":
             
         with st.expander("📲 3. Social Media Optimization Kit (Caption & Tags)", expanded=True):
             st.text_area("Copy Caption Pack:", value=st.session_state.workspace_data["captions"], height=120)
+# ==========================================
+# 5. MODULE 2: CAPTION KING STUDIO (SAFE FRAMEWORK)
+# ==========================================
+elif workspace_selection == "🎬 Caption King Studio":
+    st.title("🎬 Caption King Studio")
+    st.markdown("Burn stylized, high-retention subtitles directly into your short-form video assets.")
+    
+    st.info("🔒 **Premium Engine Interface:** Subtitle compilation and custom font rendering require a premium tier connection.")
+    
+    uploaded_video = st.file_uploader("Upload your raw MP4 video clip (Max 25MB)", type=["mp4", "mov"])
+    
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        font_style = st.selectbox("Subtitle Font", ["Impact Bold", "Montserrat ExtraBold", "Sheng Modern"])
+    with col2:
+        caption_pos = st.selectbox("Text Position", ["Center", "Lower Third", "Top Drop"])
+    with col3:
+        accent_color = st.color_picker("Accent Highlight Color", "#FF4B4B")
+        
+    if st.button("🎬 Run Subtitle Generation"):
+        if uploaded_video is not None:
+            st.warning("⚠️ High-speed video rendering requires an active premium pass subscription.")
+            st.markdown("""
+            **How to unlock this processing pipeline:**
+            1. Go to the **Monetization Portal** in the left sidebar.
+            2. Authorize an instant M-Pesa transaction pass.
+            3. Unlock high-speed background rendering tasks.
+            """)
+        else:
+            st.error("❌ Please upload a valid MP4 file container before starting the rendering engine.")
