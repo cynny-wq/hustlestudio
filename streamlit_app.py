@@ -75,12 +75,256 @@ st.sidebar.markdown(f"""
 <div class="usage-card">🎬 Captions — <strong>{hs['captions_left']} left</strong></div>
 """, unsafe_allow_html=True)
 st.sidebar.markdown("---")
-st.sidebar.caption("Free limits are session-based in this version.")
+st.sidebar.caption("Creator Content Packs use 1 script credit. Free limits are session-based in this version.")
+
+# ============================================================
+# CREATOR CONTENT PACK
+# ============================================================
+if page == "🚀 Creator Content Pack":
+
+    st.title("🚀 Creator Content Pack")
+    st.write("One topic → a complete ready-to-post content package.")
+
+    st.markdown("""
+<div class="hero-workflow">
+    <div class="hero-workflow-title">⚡ ONE TOPIC → COMPLETE CONTENT</div>
+    <div class="workflow-steps">
+        💡 Idea → 🔥 Hooks → 📝 Script → 📲 Caption → #️⃣ Hashtags → 🎯 CTA
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+    topic = st.text_input(
+        "🎯 What is your video about?",
+        placeholder="Example: How to start a small business with KSh 5,000",
+        key="pack_topic"
+    )
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        niche = st.selectbox(
+            "📌 Niche",
+            [
+                "Business & Hustle",
+                "Food & Cooking",
+                "Fashion & Beauty",
+                "Football & Sports",
+                "Tech",
+                "Motivation",
+                "Lifestyle",
+                "Comedy"
+            ],
+            key="pack_niche"
+        )
+
+    with col2:
+        style = st.selectbox(
+            "🎭 Style",
+            [
+                "Energetic",
+                "Comedic / Sheng",
+                "Storytelling",
+                "Educational"
+            ],
+            key="pack_style"
+        )
+
+    if st.button("🚀 Generate Complete Content Pack", key="generate_pack"):
+
+        if not topic.strip():
+            st.warning("⚠️ Enter a topic first.")
+
+        elif not has_credit("scripts_left"):
+            limit_message("content pack generations")
+
+        else:
+            use_credit("scripts_left")
+
+            topic_clean = topic.strip()
+
+            if style == "Comedic / Sheng":
+                hooks = [
+                    f"Wasee, mbona nobody anawaambia hii kuhusu {topic_clean}?",
+                    f"Ukiendelea kufanya hivi na {topic_clean}, utajipata kwa shida 😂",
+                    f"Nilijifunza hii kuhusu {topic_clean} the hard way...",
+                    f"Si kila mtu anakuambia ukweli kuhusu {topic_clean}.",
+                    f"Kama unaanza {topic_clean}, WATCH THIS kwanza."
+                ]
+                body = (
+                    f"Let's be honest — {topic_clean} sounds simple until you "
+                    f"actually try it. The biggest mistake is starting without "
+                    f"a clear plan. Start small, test what works, then improve."
+                )
+                cta = "Follow for more practical Kenyan creator and hustle tips."
+
+            elif style == "Storytelling":
+                hooks = [
+                    f"I wish someone had told me this about {topic_clean}.",
+                    f"This changed the way I think about {topic_clean}.",
+                    f"Nobody prepared me for this part of {topic_clean}.",
+                    f"Here's what I learned after getting {topic_clean} wrong.",
+                    f"If I could start {topic_clean} again, I'd do this first."
+                ]
+                body = (
+                    f"Most people only show the result. What they don't show "
+                    f"is the learning process behind {topic_clean}. Start with "
+                    f"one simple step, learn from the result, and keep improving."
+                )
+                cta = "Follow to see more real lessons and practical strategies."
+
+            elif style == "Educational":
+                hooks = [
+                    f"3 things you need to know about {topic_clean}.",
+                    f"Here's the simplest way to understand {topic_clean}.",
+                    f"Before you start {topic_clean}, know these 3 things.",
+                    f"The biggest mistake beginners make with {topic_clean}.",
+                    f"Let me explain {topic_clean} in 30 seconds."
+                ]
+                body = (
+                    f"First, understand the basics of {topic_clean}. Second, "
+                    f"avoid trying to do everything at once. Third, measure "
+                    f"what works and repeat it consistently."
+                )
+                cta = "Save this video and follow for more simple explanations."
+
+            else:
+                hooks = [
+                    f"STOP scrolling! You need to know this about {topic_clean}.",
+                    f"Here's what nobody tells you about {topic_clean}.",
+                    f"If you're doing {topic_clean}, don't make this mistake.",
+                    f"Want better results with {topic_clean}? Start here.",
+                    f"This one change can improve your approach to {topic_clean}."
+                ]
+                body = (
+                    f"If you're serious about {topic_clean}, don't overcomplicate "
+                    f"it. Focus on one clear goal, create useful content, and "
+                    f"stay consistent long enough to learn what your audience wants."
+                )
+                cta = "Follow for more useful content and practical tips."
+
+            best_hook = hooks[0]
+
+            script = f"""HOOK:
+{best_hook}
+
+BODY:
+{body}
+
+VISUAL PLAN:
+1. Start with a close-up talking to camera.
+2. Show a quick example, product, screen recording, or demonstration.
+3. Add 2–3 quick visual changes while explaining the main point.
+4. End by looking directly at the camera for the CTA.
+
+CTA:
+{cta}
+"""
+
+            hashtags = (
+                "#Kenya #KenyanCreators #ContentCreator #HustleKE "
+                "#TikTokKenya #InstagramReels #YouTubeShorts "
+                f"#{niche.replace(' ', '').replace('&', '')}"
+            )
+
+            hs["pack"] = {
+                "topic": topic_clean,
+                "hooks": hooks,
+                "script": script,
+                "caption": (
+                    f"🔥 {topic_clean}\n\n"
+                    f"Most people overlook this. Here's what you need to know. "
+                    f"Save this for later and share it with someone who needs it.\n\n"
+                    f"{cta}"
+                ),
+                "hashtags": hashtags,
+                "cta": cta
+            }
+
+            st.success("🎉 Your complete content pack is ready!")
+
+    if "pack" in hs and hs["pack"]:
+
+        pack = hs["pack"]
+
+        st.markdown("### 💡 Your Content Idea")
+        st.markdown(
+            f"""
+<div class="workflow-card">
+    <strong>{pack["topic"]}</strong>
+</div>
+""",
+            unsafe_allow_html=True
+        )
+
+        st.markdown("### 🔥 5 Viral Hooks")
+
+        for i, hook in enumerate(pack["hooks"], 1):
+            st.markdown(
+                f"""
+<div class="result-card">
+    <strong>Hook {i}</strong><br><br>{hook}
+</div>
+""",
+                unsafe_allow_html=True
+            )
+
+        st.markdown("### 📝 Ready-to-Record Script")
+        st.text_area(
+            "Script",
+            value=pack["script"],
+            height=300,
+            key="pack_script_display"
+        )
+
+        st.markdown("### 📲 Ready-to-Post Caption")
+        st.text_area(
+            "Caption",
+            value=pack["caption"],
+            height=160,
+            key="pack_caption_display"
+        )
+
+        st.markdown("### #️⃣ Hashtags")
+        st.code(pack["hashtags"])
+
+        st.markdown("### 🎯 Call To Action")
+        st.markdown(
+            f"""
+<div class="workflow-card">
+    🎯 {pack["cta"]}
+</div>
+""",
+            unsafe_allow_html=True
+        )
+
+        download_text = (
+            "HUSTLE STUDIO — CREATOR CONTENT PACK\n\n"
+            f"TOPIC:\n{pack['topic']}\n\n"
+            "HOOKS:\n"
+            + "\n".join(
+                f"{i}. {hook}" for i, hook in enumerate(pack["hooks"], 1)
+            )
+            + f"\n\nSCRIPT:\n{pack['script']}"
+            + f"\nCAPTION:\n{pack['caption']}"
+            + f"\n\nHASHTAGS:\n{pack['hashtags']}"
+            + f"\n\nCTA:\n{pack['cta']}"
+        )
+
+        st.download_button(
+            "📥 Download Content Pack",
+            data=download_text,
+            file_name="hustlestudio_content_pack.txt",
+            mime="text/plain",
+            key="download_pack"
+        )
+
 
 # ============================================================
 # STRATEGY STUDIO
 # ============================================================
 if page == "🧠 Strategy Studio":
+
     st.subheader("🧠 Strategy Studio")
     st.write("Your complete creator workflow:")
     st.markdown("""
