@@ -18,50 +18,207 @@ st.set_page_config(
 
 
 # ============================================================
-# 2. MOBILE-FIRST DESIGN
+# 2. HUSTLE STUDIO UI / CSS
 # ============================================================
 
 st.markdown("""
 <style>
 
+/* =========================================================
+   GLOBAL
+   ========================================================= */
+
+.block-container {
+    max-width: 1050px;
+    padding-top: 2rem;
+    padding-bottom: 4rem;
+}
+
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+
 div.stButton > button:first-child {
     width: 100%;
-    padding: 14px !important;
+    min-height: 48px;
+    padding: 12px 16px !important;
     font-size: 16px !important;
-    font-weight: bold !important;
-    border-radius: 8px !important;
+    font-weight: 700 !important;
+    border-radius: 10px !important;
+    border: 1px solid rgba(255,255,255,0.15) !important;
+    transition: all 0.2s ease;
 }
+
+div.stButton > button:first-child:hover {
+    transform: translateY(-1px);
+}
+
+
+/* =========================================================
+   SELECT BOXES
+   ========================================================= */
 
 div[data-baseweb="select"] {
-    padding: 6px 0;
+    margin-bottom: 8px;
 }
 
-.result-card {
-    background-color: #f8f9fa;
-    padding: 16px;
-    border-radius: 8px;
-    margin-bottom: 12px;
-    border-left: 5px solid #ff4b4b;
+
+/* =========================================================
+   TEXT INPUTS
+   ========================================================= */
+
+div[data-baseweb="input"] input,
+div[data-baseweb="textarea"] textarea {
+    border-radius: 10px !important;
 }
+
+
+/* =========================================================
+   DARK CARDS
+   ========================================================= */
 
 .workflow-card {
-    background-color: #f8f9fa;
-    padding: 18px;
-    border-radius: 10px;
-    margin: 10px 0;
-    border: 1px solid #e5e5e5;
+    background: #171a21;
+    border: 1px solid #30343d;
+    padding: 22px;
+    border-radius: 14px;
+    margin: 14px 0;
+    color: #ffffff !important;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.15);
 }
+
+.workflow-card * {
+    color: #ffffff !important;
+}
+
+
+.result-card {
+    background: #171a21;
+    border: 1px solid #30343d;
+    padding: 18px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    color: #ffffff !important;
+    border-left: 4px solid #ff4b4b;
+}
+
+.result-card * {
+    color: #ffffff !important;
+}
+
+
+/* =========================================================
+   FREE PLAN CARDS
+   ========================================================= */
 
 .usage-card {
-    background-color: #f8f9fa;
-    padding: 10px;
-    border-radius: 8px;
-    margin-bottom: 7px;
+    background: #171a21;
+    border: 1px solid #353943;
+    padding: 13px 15px;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    color: #ffffff !important;
+    font-size: 14px;
 }
 
+.usage-card strong {
+    color: #ffffff !important;
+}
+
+
+/* =========================================================
+   HERO WORKFLOW
+   ========================================================= */
+
+.hero-workflow {
+    background: linear-gradient(
+        135deg,
+        #171a21,
+        #20242d
+    );
+    border: 1px solid #353943;
+    border-radius: 16px;
+    padding: 24px;
+    margin: 18px 0 25px 0;
+    text-align: center;
+}
+
+.hero-workflow-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: #ffffff;
+    margin-bottom: 18px;
+}
+
+.workflow-steps {
+    font-size: 16px;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 2;
+}
+
+
+/* =========================================================
+   SECTION LABEL
+   ========================================================= */
+
+.section-label {
+    background: #171a21;
+    border: 1px solid #30343d;
+    padding: 12px 15px;
+    border-radius: 10px;
+    margin: 20px 0 12px 0;
+    color: #ffffff !important;
+    font-weight: 700;
+}
+
+
+/* =========================================================
+   SMALL TEXT
+   ========================================================= */
+
 .small-note {
-    color: #777;
+    color: #aeb4c0 !important;
     font-size: 14px;
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 768px) {
+
+    .block-container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+        padding-top: 1rem;
+    }
+
+    h1 {
+        font-size: 2rem !important;
+    }
+
+    h2 {
+        font-size: 1.6rem !important;
+    }
+
+    h3 {
+        font-size: 1.3rem !important;
+    }
+
+    .workflow-card {
+        padding: 16px;
+    }
+
+    .hero-workflow {
+        padding: 18px;
+    }
+
+    .workflow-steps {
+        font-size: 14px;
+    }
 }
 
 </style>
@@ -75,8 +232,8 @@ div[data-baseweb="select"] {
 st.title("🚀 Hustle Studio")
 
 st.success(
-    "📱 **Hustler Tip:** Tap your browser's 3 dots and "
-    "choose **Add to Home Screen** to use Hustle Studio like a phone app."
+    "📱 **Hustler Tip:** Tap your browser's 3 dots and choose "
+    "**Add to Home Screen** to use Hustle Studio like a phone app."
 )
 
 st.markdown(
@@ -85,7 +242,7 @@ st.markdown(
 
 
 # ============================================================
-# 4. FREE PLAN
+# 4. FREE PLAN LIMITS
 # ============================================================
 
 FREE_LIMITS = {
@@ -115,10 +272,11 @@ if "workspace_data" not in st.session_state:
         "free_hooks_left": 10,
         "free_scripts_left": 5,
         "free_captions_left": 3,
+
+        "idea_results": []
     }
 
 
-# Protect older sessions
 defaults = {
     "current_topic": "",
     "selected_idea": "",
@@ -127,11 +285,15 @@ defaults = {
     "script": "",
     "captions": "",
     "processed_video_data": None,
+
     "free_ideas_left": 10,
     "free_hooks_left": 10,
     "free_scripts_left": 5,
     "free_captions_left": 3,
+
+    "idea_results": []
 }
+
 
 for key, value in defaults.items():
 
@@ -144,18 +306,23 @@ for key, value in defaults.items():
 # ============================================================
 
 def usage_available(key):
+
     return st.session_state.workspace_data[key] > 0
 
 
 def use_credit(key):
+
     if st.session_state.workspace_data[key] > 0:
+
         st.session_state.workspace_data[key] -= 1
+
         return True
 
     return False
 
 
 def upgrade_message(feature):
+
     st.error(
         f"🔒 Your free {feature} limit has been reached."
     )
@@ -190,19 +357,19 @@ st.sidebar.markdown("### 🆓 Free Plan")
 st.sidebar.markdown(
     f"""
     <div class="usage-card">
-    💡 Ideas: <strong>{st.session_state.workspace_data['free_ideas_left']}</strong> left
+    💡 Ideas — <strong>{st.session_state.workspace_data['free_ideas_left']} left</strong>
     </div>
 
     <div class="usage-card">
-    🔥 Hooks: <strong>{st.session_state.workspace_data['free_hooks_left']}</strong> left
+    🔥 Hooks — <strong>{st.session_state.workspace_data['free_hooks_left']} left</strong>
     </div>
 
     <div class="usage-card">
-    📝 Scripts: <strong>{st.session_state.workspace_data['free_scripts_left']}</strong> left
+    📝 Scripts — <strong>{st.session_state.workspace_data['free_scripts_left']} left</strong>
     </div>
 
     <div class="usage-card">
-    🎬 Captions: <strong>{st.session_state.workspace_data['free_captions_left']}</strong> left
+    🎬 Captions — <strong>{st.session_state.workspace_data['free_captions_left']} left</strong>
     </div>
     """,
     unsafe_allow_html=True
@@ -211,8 +378,7 @@ st.sidebar.markdown(
 st.sidebar.markdown("---")
 
 st.sidebar.caption(
-    "Current limits are session-based. "
-    "A real monthly account system will come later."
+    "Free limits are currently session-based."
 )
 
 
@@ -225,26 +391,33 @@ if workspace_selection == "🧠 Strategy Studio":
     st.subheader("🧠 Strategy Studio")
 
     st.markdown(
-        "Your creator workflow: **Idea → Hook → Script → Caption**"
+        "Your complete creator workflow:"
     )
 
-    # ========================================================
-    # WORKFLOW STATUS
-    # ========================================================
+    # --------------------------------------------------------
+    # WORKFLOW CARD
+    # --------------------------------------------------------
 
     st.markdown(
         """
-        <div class="workflow-card">
-        <strong>🚀 CREATOR WORKFLOW</strong><br><br>
-        💡 Idea
-        →
-        🔥 Hook
-        →
-        📝 Script
-        →
-        🎬 Caption
-        →
-        📱 Post
+        <div class="hero-workflow">
+
+            <div class="hero-workflow-title">
+                🚀 YOUR CREATOR WORKFLOW
+            </div>
+
+            <div class="workflow-steps">
+                💡 Idea
+                &nbsp;→&nbsp;
+                🔥 Hook
+                &nbsp;→&nbsp;
+                📝 Script
+                &nbsp;→&nbsp;
+                🎬 Caption
+                &nbsp;→&nbsp;
+                📱 Post
+            </div>
+
         </div>
         """,
         unsafe_allow_html=True
@@ -290,9 +463,14 @@ if workspace_selection == "🧠 Strategy Studio":
     # STEP 1 — CONTENT IDEA
     # ========================================================
 
-    st.markdown("---")
-
-    st.subheader("💡 Step 1: Find Your Content Idea")
+    st.markdown(
+        """
+        <div class="section-label">
+        💡 STEP 1 — FIND YOUR CONTENT IDEA
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
     idea_topic = st.text_input(
         "What do you want to create content about?",
@@ -304,19 +482,28 @@ if workspace_selection == "🧠 Strategy Studio":
 
         if not idea_topic.strip():
 
-            st.warning("⚠️ Enter a topic first.")
+            st.warning(
+                "⚠️ Enter a topic first."
+            )
 
-        elif not usage_available("free_ideas_left"):
+        elif not usage_available(
+            "free_ideas_left"
+        ):
 
-            upgrade_message("content idea generations")
+            upgrade_message(
+                "content idea generations"
+            )
 
         else:
 
-            use_credit("free_ideas_left")
+            use_credit(
+                "free_ideas_left"
+            )
 
             clean_topic = idea_topic.strip()
 
             ideas = [
+
                 f"3 mistakes beginners make with {clean_topic}",
 
                 f"The truth nobody tells you about {clean_topic}",
@@ -336,6 +523,7 @@ if workspace_selection == "🧠 Strategy Studio":
                 f"A day in the life of someone doing {clean_topic}",
 
                 f"What nobody warns you about {clean_topic}"
+
             ]
 
             st.session_state.workspace_data[
@@ -343,10 +531,9 @@ if workspace_selection == "🧠 Strategy Studio":
             ] = ideas
 
             st.success(
-                f"10 ideas generated! "
-                f"You have "
+                f"🎉 Ideas generated! "
                 f"{st.session_state.workspace_data['free_ideas_left']} "
-                f"idea generation(s) left."
+                f"generation(s) remaining."
             )
 
 
@@ -354,19 +541,21 @@ if workspace_selection == "🧠 Strategy Studio":
     # DISPLAY IDEAS
     # ========================================================
 
-    if "idea_results" in st.session_state.workspace_data:
+    if st.session_state.workspace_data["idea_results"]:
 
         st.markdown("### 🚀 Choose an Idea")
 
         for index, idea in enumerate(
-            st.session_state.workspace_data["idea_results"]
+            st.session_state.workspace_data[
+                "idea_results"
+            ]
         ):
 
             st.markdown(
                 f"""
                 <div class="result-card">
-                <strong>Idea #{index + 1}</strong><br>
-                {idea}
+                    <strong>Idea #{index + 1}</strong><br><br>
+                    {idea}
                 </div>
                 """,
                 unsafe_allow_html=True
@@ -386,7 +575,7 @@ if workspace_selection == "🧠 Strategy Studio":
                 ] = idea
 
                 st.success(
-                    "✅ Idea selected! Scroll down to generate hooks."
+                    "✅ Idea selected!"
                 )
 
 
@@ -394,20 +583,20 @@ if workspace_selection == "🧠 Strategy Studio":
     # SELECTED IDEA
     # ========================================================
 
-    selected_idea = st.session_state.workspace_data[
-        "selected_idea"
-    ]
+    selected_idea = (
+        st.session_state.workspace_data[
+            "selected_idea"
+        ]
+    )
 
     if selected_idea:
 
-        st.markdown("---")
-
-        st.subheader("✅ Your Selected Idea")
+        st.markdown("### ✅ Selected Idea")
 
         st.markdown(
             f"""
             <div class="workflow-card">
-            <strong>{selected_idea}</strong>
+                💡 <strong>{selected_idea}</strong>
             </div>
             """,
             unsafe_allow_html=True
@@ -418,13 +607,20 @@ if workspace_selection == "🧠 Strategy Studio":
     # STEP 2 — HOOKS
     # ========================================================
 
-    st.markdown("---")
-
-    st.subheader("🔥 Step 2: Generate Your Hook")
+    st.markdown(
+        """
+        <div class="section-label">
+        🔥 STEP 2 — CREATE YOUR HOOK
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
     hook_topic = st.text_input(
         "Topic for your hooks",
-        value=st.session_state.workspace_data["current_topic"],
+        value=st.session_state.workspace_data[
+            "current_topic"
+        ],
         key="hook_topic_input"
     )
 
@@ -432,15 +628,23 @@ if workspace_selection == "🧠 Strategy Studio":
 
         if not hook_topic.strip():
 
-            st.warning("⚠️ Select an idea or enter a topic.")
+            st.warning(
+                "⚠️ Select an idea or enter a topic."
+            )
 
-        elif not usage_available("free_hooks_left"):
+        elif not usage_available(
+            "free_hooks_left"
+        ):
 
-            upgrade_message("hook generations")
+            upgrade_message(
+                "hook generations"
+            )
 
         else:
 
-            use_credit("free_hooks_left")
+            use_credit(
+                "free_hooks_left"
+            )
 
             clean_topic = hook_topic.strip()
 
@@ -449,6 +653,7 @@ if workspace_selection == "🧠 Strategy Studio":
             ] = clean_topic
 
             hooks = [
+
                 f"STOP scrolling! Nobody tells you this about {clean_topic}.",
 
                 f"Mbona nobody is talking about {clean_topic}?",
@@ -458,6 +663,7 @@ if workspace_selection == "🧠 Strategy Studio":
                 f"Umeanza {clean_topic}? Don't make this mistake.",
 
                 f"The biggest mistake people make with {clean_topic} is this..."
+
             ]
 
             st.session_state.workspace_data[
@@ -465,9 +671,9 @@ if workspace_selection == "🧠 Strategy Studio":
             ] = hooks
 
             st.success(
-                f"Hooks generated! "
+                f"🔥 Hooks generated! "
                 f"{st.session_state.workspace_data['free_hooks_left']} "
-                f"hook generation(s) remaining."
+                f"generation(s) remaining."
             )
 
 
@@ -480,14 +686,16 @@ if workspace_selection == "🧠 Strategy Studio":
         st.markdown("### 🎯 Choose Your Hook")
 
         for index, hook in enumerate(
-            st.session_state.workspace_data["hooks"]
+            st.session_state.workspace_data[
+                "hooks"
+            ]
         ):
 
             st.markdown(
                 f"""
                 <div class="result-card">
-                <strong>Hook #{index + 1}</strong><br>
-                {hook}
+                    <strong>Hook #{index + 1}</strong><br><br>
+                    {hook}
                 </div>
                 """,
                 unsafe_allow_html=True
@@ -503,7 +711,7 @@ if workspace_selection == "🧠 Strategy Studio":
                 ] = hook
 
                 st.success(
-                    "✅ Hook selected! Generate your script below."
+                    "✅ Hook selected!"
                 )
 
 
@@ -511,20 +719,20 @@ if workspace_selection == "🧠 Strategy Studio":
     # SELECTED HOOK
     # ========================================================
 
-    selected_hook = st.session_state.workspace_data[
-        "selected_hook"
-    ]
+    selected_hook = (
+        st.session_state.workspace_data[
+            "selected_hook"
+        ]
+    )
 
     if selected_hook:
 
-        st.markdown("---")
-
-        st.subheader("🔥 Selected Hook")
+        st.markdown("### 🔥 Selected Hook")
 
         st.markdown(
             f"""
             <div class="workflow-card">
-            {selected_hook}
+                🔥 <strong>{selected_hook}</strong>
             </div>
             """,
             unsafe_allow_html=True
@@ -535,17 +743,26 @@ if workspace_selection == "🧠 Strategy Studio":
     # STEP 3 — SCRIPT
     # ========================================================
 
-    st.markdown("---")
+    st.markdown(
+        """
+        <div class="section-label">
+        📝 STEP 3 — BUILD YOUR SCRIPT
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
-    st.subheader("📝 Step 3: Build Your Script")
+    script_topic = (
+        st.session_state.workspace_data[
+            "current_topic"
+        ]
+    )
 
-    script_topic = st.session_state.workspace_data[
-        "current_topic"
-    ]
-
-    script_hook = st.session_state.workspace_data[
-        "selected_hook"
-    ]
+    script_hook = (
+        st.session_state.workspace_data[
+            "selected_hook"
+        ]
+    )
 
     if not script_hook:
 
@@ -553,38 +770,50 @@ if workspace_selection == "🧠 Strategy Studio":
             "👆 Choose a hook above first."
         )
 
-    if st.button("📝 Generate My Script"):
+
+    if st.button(
+        "📝 Generate My Script"
+    ):
 
         if not script_hook:
 
             st.warning(
-                "⚠️ Select a hook before generating the script."
+                "⚠️ Select a hook first."
             )
 
-        elif not usage_available("free_scripts_left"):
+        elif not usage_available(
+            "free_scripts_left"
+        ):
 
-            upgrade_message("script generations")
+            upgrade_message(
+                "script generations"
+            )
 
         else:
 
-            use_credit("free_scripts_left")
+            use_credit(
+                "free_scripts_left"
+            )
 
-            # ----------------------------------------------
-            # SCRIPT BODY
-            # ----------------------------------------------
+
+            # ------------------------------------------------
+            # SCRIPT STYLE
+            # ------------------------------------------------
 
             if style == "Comedic / Local Vibe (Sheng Mix)":
 
                 body = (
-                    f"Wasee wengi wanaingia kwa {script_topic} "
-                    f"wakidhani ni rahisi. Lakini kuna mistake moja "
-                    f"ambayo inaweza kukupotezea time na pesa."
+                    f"Wasee wengi wanaingia kwa "
+                    f"{script_topic} wakidhani ni rahisi. "
+                    f"Lakini kuna mistake moja ambayo inaweza "
+                    f"kupotezea time na pesa."
                 )
 
                 cta = (
                     "Follow Hustle Studio for more practical "
                     "Kenyan creator and hustle tips."
                 )
+
 
             elif style == "Energetic & Fast-Paced":
 
@@ -599,6 +828,7 @@ if workspace_selection == "🧠 Strategy Studio":
                     "Follow for more quick tips."
                 )
 
+
             elif style == "Storytelling & Emotional":
 
                 body = (
@@ -611,6 +841,7 @@ if workspace_selection == "🧠 Strategy Studio":
                 cta = (
                     "Follow to see the real journey."
                 )
+
 
             else:
 
@@ -631,9 +862,11 @@ if workspace_selection == "🧠 Strategy Studio":
 
 {script_hook}
 
+
 ## 📦 BODY
 
 {body}
+
 
 ## 🎬 VISUAL INSTRUCTIONS
 
@@ -641,22 +874,27 @@ if workspace_selection == "🧠 Strategy Studio":
 
 Look directly at the camera and deliver the hook.
 
+
 **Shot 2 — 3-15 seconds**
 
 Show yourself explaining the main point.
+
 
 **Shot 3 — 15-30 seconds**
 
 Show an example, product, location, screen recording,
 or demonstration.
 
+
 **Shot 4 — Final seconds**
 
 Return to the camera and deliver the CTA.
 
+
 ## 🎯 CALL TO ACTION
 
 {cta}
+
 
 ## 🎥 RECORDING TIP
 
@@ -678,7 +916,7 @@ Add captions when editing.
             st.success(
                 f"🎉 Script ready! "
                 f"{st.session_state.workspace_data['free_scripts_left']} "
-                f"script generation(s) remaining."
+                f"generation(s) remaining."
             )
 
 
@@ -688,26 +926,33 @@ Add captions when editing.
 
     if st.session_state.workspace_data["script"]:
 
-        st.markdown("---")
-
-        st.subheader("🎬 Your Script")
+        st.markdown("### 🎬 Your Script")
 
         st.markdown(
-            st.session_state.workspace_data["script"]
+            st.session_state.workspace_data[
+                "script"
+            ]
         )
 
 
         # ====================================================
-        # STEP 4 — SOCIAL CAPTION
+        # STEP 4 — CAPTION
         # ====================================================
 
-        st.markdown("---")
+        st.markdown(
+            """
+            <div class="section-label">
+            📲 STEP 4 — READY-TO-POST CAPTION
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
 
-        st.subheader("📲 Step 4: Ready-To-Post Caption")
-
-        current_topic = st.session_state.workspace_data[
-            "current_topic"
-        ]
+        current_topic = (
+            st.session_state.workspace_data[
+                "current_topic"
+            ]
+        )
 
         social_caption = f"""
 🔥 {current_topic}
@@ -732,23 +977,38 @@ Follow for more practical content.
         )
 
         st.success(
-            "🎉 Your idea has now become a complete content package!"
+            "🎉 Your idea is now a complete content package!"
         )
 
         st.markdown(
             """
-            ### 🚀 Your next step
+            <div class="workflow-card">
 
-            **1. Record your video**
+            <strong>🚀 WHAT'S NEXT?</strong>
 
-            **2. Open 🎬 Caption King Studio**
+            <br><br>
 
-            **3. Upload your video**
+            1️⃣ Record your video
 
-            **4. Add your captions**
+            <br>
 
-            **5. Download and post**
-            """
+            2️⃣ Open 🎬 Caption King Studio
+
+            <br>
+
+            3️⃣ Upload your video
+
+            <br>
+
+            4️⃣ Add your captions
+
+            <br>
+
+            5️⃣ Download and post 📱
+
+            </div>
+            """,
+            unsafe_allow_html=True
         )
 
 
@@ -764,14 +1024,17 @@ elif workspace_selection == "🎬 Caption King Studio":
         "Turn your recorded video into a captioned short-form video."
     )
 
-    trials_left = st.session_state.workspace_data[
-        "free_captions_left"
-    ]
+    trials_left = (
+        st.session_state.workspace_data[
+            "free_captions_left"
+        ]
+    )
 
     if trials_left > 0:
 
         st.success(
-            f"🎁 You have **{trials_left}** free caption export(s) remaining."
+            f"🎁 You have **{trials_left}** free caption "
+            f"export(s) remaining."
         )
 
     else:
@@ -786,12 +1049,13 @@ elif workspace_selection == "🎬 Caption King Studio":
 
 
     uploaded_video = st.file_uploader(
-        "Upload your raw MP4 video clip (Max 25MB)",
+        "Upload your raw MP4 video",
         type=["mp4", "mov"]
     )
 
 
     col1, col2, col3 = st.columns(3)
+
 
     with col1:
 
@@ -804,6 +1068,7 @@ elif workspace_selection == "🎬 Caption King Studio":
             ]
         )
 
+
     with col2:
 
         caption_pos = st.selectbox(
@@ -815,6 +1080,7 @@ elif workspace_selection == "🎬 Caption King Studio":
             ]
         )
 
+
     with col3:
 
         accent_color = st.color_picker(
@@ -823,7 +1089,9 @@ elif workspace_selection == "🎬 Caption King Studio":
         )
 
 
-    if st.button("🎬 Create Captioned Video"):
+    if st.button(
+        "🎬 Create Captioned Video"
+    ):
 
         if uploaded_video is None:
 
@@ -831,9 +1099,13 @@ elif workspace_selection == "🎬 Caption King Studio":
                 "❌ Please upload a video first."
             )
 
-        elif not usage_available("free_captions_left"):
+        elif not usage_available(
+            "free_captions_left"
+        ):
 
-            upgrade_message("caption exports")
+            upgrade_message(
+                "caption exports"
+            )
 
         else:
 
@@ -860,7 +1132,9 @@ elif workspace_selection == "🎬 Caption King Studio":
                             uploaded_video.read()
                         )
 
-                        temp_input_path = temp_input.name
+                        temp_input_path = (
+                            temp_input.name
+                        )
 
 
                     # ----------------------------------------
@@ -900,8 +1174,10 @@ elif workspace_selection == "🎬 Caption King Studio":
                         suffix=".mp4"
                     )
 
-                    fourcc = cv2.VideoWriter_fourcc(
-                        *"mp4v"
+                    fourcc = (
+                        cv2.VideoWriter_fourcc(
+                            *"mp4v"
+                        )
                     )
 
                     out = cv2.VideoWriter(
@@ -928,7 +1204,9 @@ elif workspace_selection == "🎬 Caption King Studio":
                     # COLOR
                     # ----------------------------------------
 
-                    hex_color = accent_color.lstrip("#")
+                    hex_color = (
+                        accent_color.lstrip("#")
+                    )
 
                     bg_color_bgr = tuple(
                         int(
@@ -945,15 +1223,21 @@ elif workspace_selection == "🎬 Caption King Studio":
 
                     if font_style == "Impact Bold":
 
-                        font_face = cv2.FONT_HERSHEY_TRIPLEX
+                        font_face = (
+                            cv2.FONT_HERSHEY_TRIPLEX
+                        )
 
                     elif font_style == "Montserrat ExtraBold":
 
-                        font_face = cv2.FONT_HERSHEY_DUPLEX
+                        font_face = (
+                            cv2.FONT_HERSHEY_DUPLEX
+                        )
 
                     else:
 
-                        font_face = cv2.FONT_HERSHEY_COMPLEX
+                        font_face = (
+                            cv2.FONT_HERSHEY_COMPLEX
+                        )
 
 
                     font_scale = max(
@@ -1023,7 +1307,6 @@ elif workspace_selection == "🎬 Caption King Studio":
                         )
 
 
-                        # Background
                         cv2.rectangle(
                             frame,
                             (
@@ -1039,7 +1322,6 @@ elif workspace_selection == "🎬 Caption King Studio":
                         )
 
 
-                        # Outline
                         cv2.putText(
                             frame,
                             subtitle_text,
@@ -1052,7 +1334,6 @@ elif workspace_selection == "🎬 Caption King Studio":
                         )
 
 
-                        # Text
                         cv2.putText(
                             frame,
                             subtitle_text,
@@ -1110,7 +1391,7 @@ elif workspace_selection == "🎬 Caption King Studio":
 
 
                     # ----------------------------------------
-                    # SAVE VIDEO IN SESSION
+                    # SAVE OUTPUT
                     # ----------------------------------------
 
                     with open(
@@ -1123,7 +1404,6 @@ elif workspace_selection == "🎬 Caption King Studio":
                         ] = video_file.read()
 
 
-                    # Only charge after successful processing
                     use_credit(
                         "free_captions_left"
                     )
@@ -1151,13 +1431,21 @@ elif workspace_selection == "🎬 Caption King Studio":
                         temp_final_path
                     ]:
 
-                        if temp_path and os.path.exists(
+                        if (
                             temp_path
+                            and os.path.exists(
+                                temp_path
+                            )
                         ):
 
                             try:
-                                os.unlink(temp_path)
+
+                                os.unlink(
+                                    temp_path
+                                )
+
                             except Exception:
+
                                 pass
 
 
@@ -1165,9 +1453,11 @@ elif workspace_selection == "🎬 Caption King Studio":
     # VIDEO OUTPUT
     # ========================================================
 
-    if st.session_state.workspace_data[
-        "processed_video_data"
-    ] is not None:
+    if (
+        st.session_state.workspace_data[
+            "processed_video_data"
+        ] is not None
+    ):
 
         st.markdown("---")
 
@@ -1203,24 +1493,20 @@ elif workspace_selection == "👤 Monetization Portal":
 
 
     # ========================================================
-    # FREE
+    # FREE PLAN
     # ========================================================
 
-    st.subheader("🆓 Free")
+    st.subheader("🆓 Free Creator")
 
     st.markdown(
         """
-        <div style="
-            background-color:#f8f9fa;
-            padding:20px;
-            border-radius:10px;
-            border:1px solid #ddd;
-            color:#222;
-        ">
+        <div class="workflow-card">
 
-        <h3>Free Creator</h3>
+        <h3>🆓 Free Creator</h3>
 
-        <p>Try the Hustle Studio workflow.</p>
+        <p>
+        Try the complete Hustle Studio workflow.
+        </p>
 
         <ul>
             <li>10 content idea generations</li>
@@ -1240,35 +1526,30 @@ elif workspace_selection == "👤 Monetization Portal":
 
 
     # ========================================================
-    # WEEKLY
+    # WEEKLY PLAN
     # ========================================================
 
     st.subheader("🚀 Hustler Weekly")
 
     st.markdown(
         """
-        <div style="
-            background-color:#fff;
-            padding:20px;
-            border-radius:10px;
-            border:1px solid #ddd;
-            text-align:center;
-            color:#333;
-        ">
+        <div class="workflow-card">
 
         <h3>🚀 Hustler Weekly</h3>
 
         <h2>KSh 150</h2>
 
-        <p>7 days of higher creator limits.</p>
-
         <p>
-        • More ideas<br>
-        • More hooks<br>
-        • More scripts<br>
-        • More caption exports<br>
-        • Full creator workflow
+        7 days of higher creator limits.
         </p>
+
+        <ul>
+            <li>More content ideas</li>
+            <li>More hooks</li>
+            <li>More scripts</li>
+            <li>More caption exports</li>
+            <li>Full creator workflow</li>
+        </ul>
 
         </div>
         """,
@@ -1283,7 +1564,7 @@ elif workspace_selection == "👤 Monetization Portal":
 
         st.info(
             "📲 M-Pesa payment integration will be added "
-            "in the monetization stage."
+            "during the monetization stage."
         )
 
 
@@ -1291,35 +1572,30 @@ elif workspace_selection == "👤 Monetization Portal":
 
 
     # ========================================================
-    # PRO
+    # PRO PLAN
     # ========================================================
 
     st.subheader("🏆 Creator Pro")
 
     st.markdown(
         """
-        <div style="
-            background-color:#fff;
-            padding:20px;
-            border-radius:10px;
-            border:2px solid #ff4b4b;
-            text-align:center;
-            color:#333;
-        ">
+        <div class="workflow-card">
 
         <h3>🏆 Creator Pro</h3>
 
         <h2>KSh 500 / month</h2>
 
-        <p>For serious creators.</p>
-
         <p>
-        • High AI limits<br>
-        • More video exports<br>
-        • Advanced creator tools<br>
-        • Priority processing<br>
-        • Future analytics
+        For serious creators.
         </p>
+
+        <ul>
+            <li>High AI limits</li>
+            <li>More video exports</li>
+            <li>Advanced creator tools</li>
+            <li>Priority processing</li>
+            <li>Future creator analytics</li>
+        </ul>
 
         </div>
         """,
@@ -1334,7 +1610,7 @@ elif workspace_selection == "👤 Monetization Portal":
 
         st.info(
             "📲 M-Pesa subscription integration will be "
-            "added in the monetization stage."
+            "added during the monetization stage."
         )
 
 
