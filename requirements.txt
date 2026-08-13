@@ -6,6 +6,7 @@ opencv-python-headless
 numpy
 Pillow
 streamlit>=1.30.0
+pip install moviepy Pillow
 
 
 
