@@ -1,11 +1,10 @@
 streamlit>=1.30.0
-moviepy
 Pillow
-pandas
-requests
 opencv-python-headless
 numpy
-openai-whisper
+pandas
+requests
+
 
 
 
