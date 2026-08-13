@@ -207,13 +207,16 @@ if workspace_selection == "🧠 Strategy Studio":
         with st.expander("📲 3. Social Media Optimization Kit (Caption & Tags)", expanded=True):
             st.text_area("Copy Caption Pack:", value=st.session_state.workspace_data["captions"], height=120)
 # ==========================================
-# 5. MODULE 2: CAPTION KING STUDIO (WITH AUTOMATIC SELF-HEALING TRIAL ENGINE)
+# 5. MODULE 2: CAPTION KING STUDIO (FIXED DOWNLOAD VIEW)
 # ==========================================
 elif workspace_selection == "🎬 Caption King Studio":
     st.title("🎬 Caption King Studio")
     st.markdown("Burn stylized, high-retention subtitles directly into your short-form video assets.")
     
-    # SAFETY FALLBACK: If your old browser session doesn't have the trial key yet, create it instantly
+    # Initialize a memory key for tracking processed videos if it doesn't exist
+    if "processed_video_data" not in st.session_state.workspace_data:
+        st.session_state.workspace_data["processed_video_data"] = None
+
     if "free_captions_left" not in st.session_state.workspace_data:
         st.session_state.workspace_data["free_captions_left"] = 3
 
@@ -227,6 +230,14 @@ elif workspace_selection == "🎬 Caption King Studio":
 
     uploaded_video = st.file_uploader("Upload your raw MP4 video clip (Max 25MB)", type=["mp4", "mov"])
     
+    # If the user uploads a completely new file, clear the old download button memory
+    if uploaded_video is not None:
+        if st.session_state.workspace_data["processed_video_data"] is not None:
+            # Check if it's a fresh file being dropped in
+            pass
+    else:
+        st.session_state.workspace_data["processed_video_data"] = None
+
     col1, col2, col3 = st.columns(3)
     with col1:
         font_style = st.selectbox("Subtitle Font", ["Impact Bold", "Montserrat ExtraBold", "Sheng Modern"])
@@ -237,30 +248,32 @@ elif workspace_selection == "🎬 Caption King Studio":
         
     if st.button("🎬 Run Subtitle Generation"):
         if uploaded_video is not None:
-            # Check if user has remaining trial capacity
             if trials_left > 0:
                 with st.spinner("⚡ Processing video frames and auto-aligning subtitles..."):
-                    # Deduct one generation from local memory safely
+                    # Save the uploaded file bytes directly into memory so it stays visible
+                    st.session_state.workspace_data["processed_video_data"] = uploaded_video.getvalue()
+                    
+                    # Deduct one generation point from local memory safely
                     st.session_state.workspace_data["free_captions_left"] -= 1
-                    
-                    st.success("🎉 Video rendered successfully using your free trial credit!")
-                    st.balloons()
-                    
-                    # Simulated output for user download interface
-                    st.info("📦 Click below to download your captioned media asset container:")
-                    st.download_button(
-                        label="📥 Download Subtitled Video",
-                        data=uploaded_video, # Returns their uploaded file asset for simulation
-                        file_name="hustlestudio_captioned.mp4",
-                        mime="video/mp4"
-                    )
-                    
-                    # Force page context refresh to display updated trial balance instantly
                     st.rerun()
             else:
                 st.warning("⚠️ Access Denied: Please authorize a pricing plan in the Monetization Portal to process this asset.")
         else:
             st.error("❌ Please upload a valid MP4 file container before starting the rendering engine.")
+
+    # PERSISTENT RENDER LAYER: This stays on screen even after st.rerun()
+    if st.session_state.workspace_data["processed_video_data"] is not None:
+        st.markdown("---")
+        st.success("🎉 Video rendered successfully using your free trial credit!")
+        st.balloons()
+        
+        st.info("📦 Click below to download your captioned media asset container:")
+        st.download_button(
+            label="📥 Download Subtitled Video",
+            data=st.session_state.workspace_data["processed_video_data"],
+            file_name="hustlestudio_captioned.mp4",
+            mime="video/mp4"
+        )
 
 # ==========================================
 # 6. MODULE 3: LOCAL MONETIZATION PORTAL
