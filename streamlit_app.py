@@ -207,7 +207,7 @@ if workspace_selection == "🧠 Strategy Studio":
         with st.expander("📲 3. Social Media Optimization Kit (Caption & Tags)", expanded=True):
             st.text_area("Copy Caption Pack:", value=st.session_state.workspace_data["captions"], height=120)
 # ==========================================
-# 5. MODULE 2: CAPTION KING STUDIO (REAL EDITING ENGINE)
+# 5. MODULE 2: CAPTION KING STUDIO (STABLE ENGINE)
 # ==========================================
 elif workspace_selection == "🎬 Caption King Studio":
     st.title("🎬 Caption King Studio")
@@ -242,74 +242,96 @@ elif workspace_selection == "🎬 Caption King Studio":
     if st.button("🎬 Run Subtitle Generation"):
         if uploaded_video is not None:
             if trials_left > 0:
-                with st.spinner("🧠 Writing and burning subtitles into video layers (this takes a few seconds)..."):
+                with st.spinner("🧠 Drawing and burning subtitles into video layers smoothly..."):
                     try:
                         import tempfile
-                        from moviepy.editor import VideoFileClip, TextClip, CompositeVideoClip
+                        import cv2
+                        import numpy as np
+                        from PIL import Image, ImageDraw, ImageFont
                         
-                        # 1. Save uploaded file bytes safely to a temporary file
+                        # 1. Save uploaded file bytes to a secure temporary location
                         with tempfile.NamedTemporaryFile(delete=False, suffix=".mp4") as temp_input:
                             temp_input.write(uploaded_video.read())
                             temp_input_path = temp_input.name
 
-                        # 2. Load the video track into MoviePy
-                        video = VideoFileClip(temp_input_path)
-                        
-                        # 3. Create a dynamic subtitle text overlay matching your selections
-                        # Pulls topic script from Tab 1 to use as subtitle text fallback
+                        # 2. Open the video using OpenCV tracking readers
+                        cap = cv2.VideoCapture(temp_input_path)
+                        width  = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+                        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+                        fps    = cap.get(cv2.CAP_PROP_FPS)
+                        if fps == 0 or np.isnan(fps):
+                            fps = 30.0
+
+                        # 3. Create a clean background output path setup
+                        temp_output_path = tempfile.mktemp(suffix=".mp4")
+                        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+                        out = cv2.VideoWriter(temp_output_path, fourcc, fps, (width, height))
+
+                        # Determine text string based on Strategy Studio choices
                         subtitle_text = "Hustle Studio Content"
                         if st.session_state.workspace_data["current_topic"]:
                             subtitle_text = f"Siri ya {st.session_state.workspace_data['current_topic']} Kenya!"
 
-                        # Determine vertical position layout metric
-                        y_placement = "bottom"
-                        if caption_pos == "Center":
-                            y_placement = "center"
-                        elif caption_pos == "Top Drop":
-                            y_placement = "top"
+                        # 4. Loop over every frame to draw text layouts manually
+                        while cap.isOpened():
+                            ret, frame = cap.read()
+                            if not ret:
+                                break
+                            
+                            # Convert opencv frame colorspace to Pillow standard
+                            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                            pil_img = Image.fromarray(frame_rgb)
+                            draw = ImageDraw.Draw(pil_img)
+                            
+                            # Use default font layer scaling to guarantee layout rendering across any device
+                            try:
+                                font = ImageFont.load_default()
+                            except:
+                                font = ImageFont.load_default()
 
-                        # Build the text render clip layer
-                        txt_clip = TextClip(
-                            subtitle_text, 
-                            fontsize=32, 
-                            color='white', 
-                            bg_color=accent_color,
-                            size=(video.w - 40, None),
-                            method='caption'
-                        )
-                        
-                        # Set text parameters to display continuously across a 5-second short clip window
-                        txt_clip = txt_clip.set_pos((20, y_placement)).set_duration(min(5, video.duration))
+                            # Setup layout placement alignments
+                            text_w = len(subtitle_text) * 8
+                            text_h = 15
+                            x = int((width - text_w) / 2)
+                            
+                            if caption_pos == "Center":
+                                y = int((height - text_h) / 2)
+                            elif caption_pos == "Top Drop":
+                                y = int(height * 0.1)
+                            else: # Lower Third default boundary map
+                                y = int(height * 0.8)
 
-                        # 4. Composite the layers together into a new output
-                        final_video = CompositeVideoClip([video, txt_clip])
-                        
-                        # 5. Render out back to an output path container
-                        temp_output_path = tempfile.mktemp(suffix=".mp4")
-                        final_video.write_videofile(
-                            temp_output_path, 
-                            codec="libx264", 
-                            audio_codec="aac",
-                            logger=None # Suppress massive internal shell processing printouts
-                        )
+                            # Burn background accent highlight padding banner strip
+                            pad = 10
+                            draw.rectangle(
+                                [x - pad, y - pad, x + text_w + pad, y + text_h + pad], 
+                                fill=accent_color
+                            )
+                            
+                            # Burn clean text layer overlay block
+                            draw.text((x, y), subtitle_text, fill="white", font=font)
+                            
+                            # Write modified frame byte strings back to video container layout
+                            final_frame = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
+                            out.write(final_frame)
 
-                        # 6. Read the newly captioned file bytes back into state memory
+                        cap.release()
+                        out.release()
+
+                        # 5. Lock completed video asset byte layers back into persistent view
                         with open(temp_output_path, "rb") as f:
                             st.session_state.workspace_data["processed_video_data"] = f.read()
 
-                        # Clean up temporary disk files to avoid container size leaks
-                        video.close()
-                        final_video.close()
+                        # Disk file protection clearing rules
                         os.unlink(temp_input_path)
                         os.unlink(temp_output_path)
 
-                        # Deduct one generation credit point from storage balance
+                        # Balance count points tracking adjustments
                         st.session_state.workspace_data["free_captions_left"] -= 1
                         st.rerun()
 
                     except Exception as e:
                         st.error(f"❌ Video Processing System Error: {str(e)}")
-                        st.info("💡 Note: Running video text layers requires image utilities installed on your system engine host.")
             else:
                 st.warning("⚠️ Access Denied: Please authorize a pricing plan in the Monetization Portal to process this asset.")
         else:
@@ -321,7 +343,6 @@ elif workspace_selection == "🎬 Caption King Studio":
         st.success("🎉 Subtitles burned directly into your video frames successfully!")
         st.balloons()
         
-        # Display video preview screen on dashboard interface
         st.video(st.session_state.workspace_data["processed_video_data"])
         
         st.info("📦 Click below to download your captioned media asset container:")
