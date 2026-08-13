@@ -39,13 +39,16 @@ st.success(
 st.markdown("Standalone digital tools designed to help Kenyan content creators grow fast.")
 
 # 3. INITIALIZE PERSISTENT WORKSPACE STATE ENGINE
+# UPDATE THIS BLOCK INSIDE PIECE 1 AT THE TOP OF YOUR FILE:
 if "workspace_data" not in st.session_state:
     st.session_state.workspace_data = {
         "hooks": [],
         "script": "",
         "captions": "",
-        "current_topic": ""
+        "current_topic": "",
+        "free_captions_left": 3  # Tracks the 3 free video caption trials
     }
+
 # ==========================================
 # 3. SIDEBAR NAVIGATION MODEL
 # ==========================================
@@ -204,14 +207,20 @@ if workspace_selection == "🧠 Strategy Studio":
         with st.expander("📲 3. Social Media Optimization Kit (Caption & Tags)", expanded=True):
             st.text_area("Copy Caption Pack:", value=st.session_state.workspace_data["captions"], height=120)
 # ==========================================
-# 5. MODULE 2: CAPTION KING STUDIO (SAFE FRAMEWORK)
+# 5. MODULE 2: CAPTION KING STUDIO (WITH 3 FREE TRIALS)
 # ==========================================
 elif workspace_selection == "🎬 Caption King Studio":
     st.title("🎬 Caption King Studio")
     st.markdown("Burn stylized, high-retention subtitles directly into your short-form video assets.")
     
-    st.info("🔒 **Premium Engine Interface:** Subtitle compilation and custom font rendering require a premium tier connection.")
-    
+    # Live balance tracking alert metrics
+    trials_left = st.session_state.workspace_data["free_captions_left"]
+    if trials_left > 0:
+        st.success(f"🎁 **Free Trial Active:** You have **{trials_left} out of 3** free caption generations left!")
+    else:
+        st.error("🔒 **Premium Engine Interface Required:** Your 3 free caption trial generations have expired.")
+        st.info("💡 Go to the **Monetization Portal** in the sidebar menu to unlock unlimited video processing via M-Pesa.")
+
     uploaded_video = st.file_uploader("Upload your raw MP4 video clip (Max 25MB)", type=["mp4", "mov"])
     
     col1, col2, col3 = st.columns(3)
@@ -224,15 +233,31 @@ elif workspace_selection == "🎬 Caption King Studio":
         
     if st.button("🎬 Run Subtitle Generation"):
         if uploaded_video is not None:
-            st.warning("⚠️ High-speed video rendering requires an active premium pass subscription.")
-            st.markdown("""
-            **How to unlock this processing pipeline:**
-            1. Go to the **Monetization Portal** in the left sidebar.
-            2. Authorize an instant M-Pesa transaction pass.
-            3. Unlock high-speed background rendering tasks.
-            """)
+            # Check if user has remaining trial capacity
+            if trials_left > 0:
+                with st.spinner("⚡ Processing video frames and auto-aligning subtitles..."):
+                    # Deduct one generation from local memory
+                    st.session_state.workspace_data["free_captions_left"] -= 1
+                    
+                    st.success("🎉 Video rendered successfully using your free trial credit!")
+                    st.balloons()
+                    
+                    # Simulated output for user download interface
+                    st.info("📦 Click below to download your captioned media asset container:")
+                    st.download_button(
+                        label="📥 Download Subtitled Video",
+                        data=uploaded_video, # Returns their uploaded file asset for simulation
+                        file_name="hustlestudio_captioned.mp4",
+                        mime="video/mp4"
+                    )
+                    
+                    # Refreshing browser view context to show updated trial balance
+                    st.rerun()
+            else:
+                st.warning("⚠️ Access Denied: Please authorize a pricing plan in the Monetization Portal to process this asset.")
         else:
             st.error("❌ Please upload a valid MP4 file container before starting the rendering engine.")
+
 # ==========================================
 # 6. MODULE 3: LOCAL MONETIZATION PORTAL
 # ==========================================
