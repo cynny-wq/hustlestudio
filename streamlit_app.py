@@ -207,7 +207,7 @@ if workspace_selection == "🧠 Strategy Studio":
         with st.expander("📲 3. Social Media Optimization Kit (Caption & Tags)", expanded=True):
             st.text_area("Copy Caption Pack:", value=st.session_state.workspace_data["captions"], height=120)
 # ==========================================
-# 5. MODULE 2: CAPTION KING STUDIO (REAL SPEECH-TO-TEXT AUDIO ENGINE)
+# 5. MODULE 2: CAPTION KING STUDIO (SYNCED AUDIO & CAPTIONS ENGINE)
 # ==========================================
 elif workspace_selection == "🎬 Caption King Studio":
     st.title("🎬 Caption King Studio")
@@ -242,10 +242,11 @@ elif workspace_selection == "🎬 Caption King Studio":
     if st.button("🎬 Run Subtitle Generation"):
         if uploaded_video is not None:
             if trials_left > 0:
-                with st.spinner("🧠 Extracting audio track and transcribing speech into text..."):
+                with st.spinner("🧠 Transcribing speech and syncing original audio tracking..."):
                     try:
                         import tempfile
                         import os
+                        import subprocess
                         import cv2
                         import numpy as np
                         import whisper
@@ -255,8 +256,7 @@ elif workspace_selection == "🎬 Caption King Studio":
                             temp_input.write(uploaded_video.read())
                             temp_input_path = temp_input.name
 
-                        # 2. Extract and transcribe audio waves using the local Whisper AI base model
-                        # This listens to the actual spoken dialogue inside the uploaded video container
+                        # 2. Extract and transcribe audio waves using the local Whisper AI model
                         model = whisper.load_model("tiny")
                         transcription_result = model.transcribe(temp_input_path)
                         segments = transcription_result.get("segments", [])
@@ -269,40 +269,36 @@ elif workspace_selection == "🎬 Caption King Studio":
                         if fps == 0 or np.isnan(fps):
                             fps = 30.0
 
-                        # Create clean background output path setup
-                        temp_output_path = tempfile.mktemp(suffix=".mp4")
+                        # Create a clean temporary background file path for the silent subtitled video
+                        temp_silent_video_path = tempfile.mktemp(suffix=".mp4")
                         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-                        out = cv2.VideoWriter(temp_output_path, fourcc, fps, (width, height))
+                        out = cv2.VideoWriter(temp_silent_video_path, fourcc, fps, (width, height))
 
                         # Convert hex color string to BGR format for OpenCV overlay layers
                         hex_color = accent_color.lstrip('#')
                         bg_color_bgr = tuple(int(hex_color[i:i+2], 16) for i in (4, 2, 0))
 
                         frame_index = 0
-                        # 4. Loop over every frame to burn recognized speech text dynamically based on timeline timestamps
+                        # 4. Loop over every frame to burn recognized speech text dynamically
                         while cap.isOpened():
                             ret, frame = cap.read()
                             if not ret:
                                 break
                             
-                            # Calculate the active video playback time in seconds
                             current_time_seconds = frame_index / fps
                             
-                            # Find if there is a spoken word segment matched to this exact timestamp
                             active_subtitle_text = ""
                             for segment in segments:
                                 if segment["start"] <= current_time_seconds <= segment["end"]:
                                     active_subtitle_text = segment["text"].strip()
                                     break
                             
-                            # Only execute drawing calculations if speech is active on this frame
                             if active_subtitle_text:
                                 font_face = cv2.FONT_HERSHEY_SIMPLEX
                                 font_scale = max(1.0, width / 450.0) 
                                 thickness = max(2, int(font_scale * 2.5))
                                 
                                 (text_w, text_h), baseline = cv2.getTextSize(active_subtitle_text, font_face, font_scale, thickness)
-                                
                                 x = int((width - text_w) / 2)
                                 
                                 if caption_pos == "Center":
@@ -333,12 +329,33 @@ elif workspace_selection == "🎬 Caption King Studio":
                         cap.release()
                         out.release()
 
-                        # 5. Lock completed video asset byte layers back into persistent view
-                        with open(temp_output_path, "rb") as f:
+                        # 5. RE-SYNC AUDIO PIPELINE USING FFMPEG
+                        # Pulls raw audio channel from the original uploaded video and binds it directly onto the subtitled copy
+                        temp_final_mux_path = tempfile.mktemp(suffix=".mp4")
+                        
+                        ffmpeg_cmd = [
+                            "ffmpeg", "-y",
+                            "-i", temp_silent_video_path, # Input 0: Captioned silent track
+                            "-i", temp_input_path,        # Input 1: Original audio track source
+                            "-map", "0:v:0",               # Pick video from Input 0
+                            "-map", "1:a:0?",              # Pick audio from Input 1 (the question mark handles audio-less clips gracefully)
+                            "-c:v", "copy",                # Stream copy video format immediately without re-rendering delays
+                            "-c:a", "aac",                 # Compress sound channel cleanly to universal AAC web standard
+                            "-shortest",                   # Align video timelines to match length properties
+                            temp_final_mux_path
+                        ]
+                        
+                        # Execute the background system process thread safely
+                        subprocess.run(ffmpeg_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+
+                        # 6. Read the newly audio-synced video track bytes back into active state memory
+                        with open(temp_final_mux_path, "rb") as f:
                             st.session_state.workspace_data["processed_video_data"] = f.read()
 
+                        # Disk file filesystem safety housecleaning
                         os.unlink(temp_input_path)
-                        os.unlink(temp_output_path)
+                        os.unlink(temp_silent_video_path)
+                        os.unlink(temp_final_mux_path)
 
                         st.session_state.workspace_data["free_captions_left"] -= 1
                         st.rerun()
@@ -353,7 +370,7 @@ elif workspace_selection == "🎬 Caption King Studio":
     # PERSISTENT RENDER LAYER
     if st.session_state.workspace_data["processed_video_data"] is not None:
         st.markdown("---")
-        st.success("🎉 Real speech subtitles transcribed and burned successfully!")
+        st.success("🎉 Real speech subtitles transcribed and audio synced successfully!")
         st.balloons()
         
         st.video(st.session_state.workspace_data["processed_video_data"])
