@@ -21,7 +21,24 @@ st.set_page_config(
 # 2. HUSTLE STUDIO UI / CSS
 # ============================================================
 
-st.markdown("""
+st.markdown(
+    """
+<div class="hero-workflow">
+    <div class="hero-workflow-title">
+        🚀 YOUR CREATOR WORKFLOW
+    </div>
+
+    <div class="workflow-steps">
+        💡 Idea &nbsp;→&nbsp;
+        🔥 Hook &nbsp;→&nbsp;
+        📝 Script &nbsp;→&nbsp;
+        🎬 Caption &nbsp;→&nbsp;
+        📱 Post
+    </div>
+</div>
+""",
+    unsafe_allow_html=True
+)
 <style>
 
 /* =========================================================
