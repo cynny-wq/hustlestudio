@@ -78,9 +78,320 @@ st.sidebar.markdown("---")
 st.sidebar.caption("Creator Content Packs use 1 script credit. Free limits are session-based in this version.")
 
 # ============================================================
+# VIRAL ANALYZER
+# ============================================================
+if page == "🔥 Viral Analyzer":
+
+    st.title("🔥 Viral Analyzer")
+    st.write(
+        "Score your idea, hook, caption, or script before you post it."
+    )
+
+    st.markdown("""
+<div class="hero-workflow">
+    <div class="hero-workflow-title">📈 TEST YOUR CONTENT BEFORE POSTING</div>
+    <div class="workflow-steps">
+        🎯 Hook → 👀 Curiosity → ❤️ Emotion → 🇰🇪 Relevance → ⏱️ Retention → 🚀 Viral Score
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+    analyzer_text = st.text_area(
+        "📝 Paste your video idea, hook, caption, or script",
+        placeholder=(
+            "Example: I started selling shoes with KSh 3,000. "
+            "Here's what nobody warned me about..."
+        ),
+        height=180,
+        key="analyzer_text"
+    )
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        analyzer_platform = st.selectbox(
+            "📱 Platform",
+            ["TikTok", "Instagram Reels", "YouTube Shorts"],
+            key="analyzer_platform"
+        )
+
+    with col2:
+        analyzer_audience = st.selectbox(
+            "🎯 Audience",
+            [
+                "Kenyan Audience",
+                "African Audience",
+                "Global Audience",
+                "Business / Hustle Audience",
+                "Young Creators"
+            ],
+            key="analyzer_audience"
+        )
+
+    if st.button("🔥 Analyze My Content", key="analyze_content"):
+
+        if not analyzer_text.strip():
+            st.warning("⚠️ Paste something to analyze first.")
+
+        else:
+            text = analyzer_text.strip()
+            lower = text.lower()
+
+            # Simple rule-based analysis keeps this version usable
+            # without requiring another API key.
+            hook_points = 5
+
+            curiosity_words = [
+                "secret", "nobody", "mistake", "truth", "warning",
+                "why", "how", "before", "never", "hidden", "actually",
+                "don't", "didn't", "what"
+            ]
+
+            emotion_words = [
+                "money", "fear", "mistake", "success", "failure",
+                "dream", "shocking", "love", "hate", "struggle",
+                "loss", "win", "secret", "warning"
+            ]
+
+            local_words = [
+                "kenya", "kenyan", "nairobi", "m-pesa", "mpesa",
+                "ksh", "shilling", "sheng", "matatu", "mombasa",
+                "kisumu", "eldoret", "hustle"
+            ]
+
+            curiosity_hits = sum(
+                1 for word in curiosity_words if word in lower
+            )
+            emotion_hits = sum(
+                1 for word in emotion_words if word in lower
+            )
+            local_hits = sum(
+                1 for word in local_words if word in lower
+            )
+
+            word_count = len(text.split())
+
+            if len(text) <= 80:
+                curiosity_score = 8
+            elif len(text) <= 160:
+                curiosity_score = 7
+            else:
+                curiosity_score = 5
+
+            curiosity_score = min(
+                10,
+                curiosity_score + min(2, curiosity_hits)
+            )
+
+            emotion_score = min(
+                10,
+                5 + min(5, emotion_hits)
+            )
+
+            relevance_score = 6
+
+            if analyzer_audience == "Kenyan Audience":
+                relevance_score = min(
+                    10,
+                    7 + min(3, local_hits)
+                )
+            elif analyzer_audience == "African Audience":
+                relevance_score = min(
+                    10,
+                    6 + min(4, local_hits)
+                )
+            else:
+                relevance_score = 7
+
+            retention_score = 7
+
+            if "3 " in lower or "3 things" in lower:
+                retention_score += 1
+            if "step" in lower or "steps" in lower:
+                retention_score += 1
+            if "first" in lower or "then" in lower:
+                retention_score += 1
+
+            retention_score = min(10, retention_score)
+
+            hook_score = 6
+
+            strong_openers = [
+                "stop", "wait", "nobody", "here's", "this is",
+                "i started", "if you're", "before you", "don't"
+            ]
+
+            if any(opener in lower for opener in strong_openers):
+                hook_score += 2
+
+            if "?" in text:
+                hook_score += 1
+
+            if "!" in text:
+                hook_score += 1
+
+            hook_score = min(10, hook_score)
+
+            viral_score = round(
+                (
+                    hook_score
+                    + curiosity_score
+                    + emotion_score
+                    + relevance_score
+                    + retention_score
+                ) / 5,
+                1
+            )
+
+            if viral_score >= 8.5:
+                rating = "🔥 VERY STRONG"
+                rating_message = "This has strong short-form potential."
+            elif viral_score >= 7:
+                rating = "🚀 GOOD POTENTIAL"
+                rating_message = "The idea is solid, but the opening can be stronger."
+            elif viral_score >= 5.5:
+                rating = "⚠️ NEEDS WORK"
+                rating_message = "There is a usable idea here, but the packaging needs improvement."
+            else:
+                rating = "🔧 WEAK"
+                rating_message = "Rework the hook and make the value clearer."
+
+            weaknesses = []
+
+            if hook_score < 8:
+                weaknesses.append(
+                    "Your opening is not strong enough to stop scrolling."
+                )
+
+            if curiosity_score < 8:
+                weaknesses.append(
+                    "Add a curiosity gap, specific result, mistake, or unexpected claim."
+                )
+
+            if emotion_score < 7:
+                weaknesses.append(
+                    "Give the viewer a stronger reason to care emotionally."
+                )
+
+            if relevance_score < 8:
+                weaknesses.append(
+                    "Make the example more specific to your target audience."
+                )
+
+            if retention_score < 8:
+                weaknesses.append(
+                    "Break the content into quick steps, examples, or visual changes."
+                )
+
+            if word_count > 100:
+                weaknesses.append(
+                    "The text is long. Make the first section faster and more direct."
+                )
+
+            if not weaknesses:
+                weaknesses.append(
+                    "No major weakness detected. Test multiple versions and compare results."
+                )
+
+            # Generate an improved hook without pretending it came from live trends.
+            topic_hint = text.split(".")[0].strip()
+
+            if "ksh" in lower or "kenya" in lower or "kenyan" in lower:
+                improved_hook = (
+                    f"🇰🇪 I tried {topic_hint.lower()} — here's the mistake "
+                    "I wish someone warned me about."
+                )
+            elif "how" in lower:
+                improved_hook = (
+                    f"STOP scrolling — here's the part about {topic_hint.lower()} "
+                    "that most beginners get wrong."
+                )
+            else:
+                improved_hook = (
+                    f"Nobody tells you this about {topic_hint.lower()} — "
+                    "but it can save you time and money."
+                )
+
+            hs["analysis"] = {
+                "score": viral_score,
+                "rating": rating,
+                "message": rating_message,
+                "hook": hook_score,
+                "curiosity": curiosity_score,
+                "emotion": emotion_score,
+                "relevance": relevance_score,
+                "retention": retention_score,
+                "weaknesses": weaknesses,
+                "improved_hook": improved_hook,
+                "platform": analyzer_platform
+            }
+
+            st.success("🎉 Analysis complete!")
+
+    if "analysis" in hs and hs["analysis"]:
+
+        result = hs["analysis"]
+
+        st.markdown("### 🚀 Overall Viral Score")
+
+        score_col1, score_col2 = st.columns(2)
+
+        with score_col1:
+            st.metric(
+                "Viral Potential",
+                f"{result['score']}/10"
+            )
+
+        with score_col2:
+            st.metric(
+                "Rating",
+                result["rating"]
+            )
+
+        st.info(result["message"])
+
+        st.markdown("### 📊 Content Scorecard")
+
+        score_items = [
+            ("🎯 Hook Strength", result["hook"]),
+            ("👀 Curiosity", result["curiosity"]),
+            ("❤️ Emotional Pull", result["emotion"]),
+            ("🇰🇪 Audience Relevance", result["relevance"]),
+            ("⏱️ Retention Potential", result["retention"])
+        ]
+
+        for label, score in score_items:
+            st.markdown(f"**{label} — {score}/10**")
+            st.progress(score / 10)
+
+        st.markdown("### ⚠️ What You Should Improve")
+
+        for weakness in result["weaknesses"]:
+            st.markdown(f"• {weakness}")
+
+        st.markdown("### 🔥 Improved Hook")
+
+        st.markdown(
+            f"""
+<div class="result-card">
+    <strong>🚀 Try this:</strong><br><br>
+    {result["improved_hook"]}
+</div>
+""",
+            unsafe_allow_html=True
+        )
+
+        st.caption(
+            f"Analyzed for {result['platform']}. "
+            "This score is a content-quality estimate, not a guarantee of views."
+        )
+
+
+# ============================================================
 # CREATOR CONTENT PACK
 # ============================================================
 if page == "🚀 Creator Content Pack":
+
 
     st.title("🚀 Creator Content Pack")
     st.write("One topic → a complete ready-to-post content package.")
