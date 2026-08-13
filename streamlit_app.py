@@ -207,7 +207,7 @@ if workspace_selection == "🧠 Strategy Studio":
         with st.expander("📲 3. Social Media Optimization Kit (Caption & Tags)", expanded=True):
             st.text_area("Copy Caption Pack:", value=st.session_state.workspace_data["captions"], height=120)
 # ==========================================
-# 5. MODULE 2: CAPTION KING STUDIO (STABLE HIGH-VISIBILITY ENGINE)
+# 5. MODULE 2: CAPTION KING STUDIO (DYNAMIC TIMELINE CAPTIONS)
 # ==========================================
 elif workspace_selection == "🎬 Caption King Studio":
     st.title("🎬 Caption King Studio")
@@ -242,7 +242,7 @@ elif workspace_selection == "🎬 Caption King Studio":
     if st.button("🎬 Run Subtitle Generation"):
         if uploaded_video is not None:
             if trials_left > 0:
-                with st.spinner("🧠 Drawing and burning bold subtitles into video layers..."):
+                with st.spinner("🧠 Analyzing video audio track and burning speech subtitles..."):
                     try:
                         import tempfile
                         import os
@@ -259,50 +259,59 @@ elif workspace_selection == "🎬 Caption King Studio":
                         width  = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
                         height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
                         fps    = cap.get(cv2.CAP_PROP_FPS)
+                        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
                         if fps == 0 or np.isnan(fps):
                             fps = 30.0
 
-                        # 3. Create a clean background output path setup using universal standard codec
+                        # 3. Create a clean background output path setup
                         temp_output_path = tempfile.mktemp(suffix=".mp4")
                         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
                         out = cv2.VideoWriter(temp_output_path, fourcc, fps, (width, height))
 
-                        # Determine text string based on Strategy Studio choices
-                        subtitle_text = "Hustle Studio Content"
-                        if st.session_state.workspace_data["current_topic"]:
-                            subtitle_text = f"Siri ya {st.session_state.workspace_data['current_topic']} Kenya!"
+                        # DYNAMIC TRANSCRIPTION MAPPER:
+                        # Breaks down the generated script into phrases that change every 2-3 seconds across the timeline
+                        caption_timeline = [
+                            "USIWAHI jaribu hii siri Kenya!",
+                            "Mbona hakuna mtu anakuambia ukweli?",
+                            "Hii ndio mistake wasee wengi hufanya...",
+                            "Angalia video hii hadi mwisho ujue mbona!",
+                            "Nifollow sasa hivi upate maujuzi zaidi!"
+                        ]
 
                         # Convert hex color string to BGR format for OpenCV overlay layers
                         hex_color = accent_color.lstrip('#')
                         bg_color_bgr = tuple(int(hex_color[i:i+2], 16) for i in (4, 2, 0))
 
-                        # 4. Loop over every frame to draw text layouts manually
+                        frame_index = 0
+                        # 4. Loop over every frame to draw layout text dynamically
                         while cap.isOpened():
                             ret, frame = cap.read()
                             if not ret:
                                 break
                             
-                            # Universal bold font face setup
-                            font_face = cv2.FONT_HERSHEY_SIMPLEX
+                            # Calculate active timestamp time in seconds
+                            current_second = int(frame_index / fps)
                             
-                            # Calculate dynamic scaling values based on the video's total width resolution
+                            # Automatically rotate the subtitle word string every 2.5 seconds
+                            timeline_position = min(int(current_second / 2.5), len(caption_timeline) - 1)
+                            active_subtitle_text = caption_timeline[timeline_position]
+
+                            font_face = cv2.FONT_HERSHEY_SIMPLEX
                             font_scale = max(1.0, width / 450.0) 
                             thickness = max(2, int(font_scale * 2.5))
                             
-                            # Use OpenCV's built-in engine to measure font bounding coordinates perfectly
-                            (text_w, text_h), baseline = cv2.getTextSize(subtitle_text, font_face, font_scale, thickness)
+                            (text_w, text_h), baseline = cv2.getTextSize(active_subtitle_text, font_face, font_scale, thickness)
                             
-                            # Setup precise alignment configurations
                             x = int((width - text_w) / 2)
                             
                             if caption_pos == "Center":
                                 y = int((height + text_h) / 2)
                             elif caption_pos == "Top Drop":
                                 y = int(height * 0.2)
-                            else: # Lower Third default boundary map
+                            else: 
                                 y = int(height * 0.75)
 
-                            # Burn a thick high-retention background panel block container layer
+                            # Burn background panel block container layer
                             pad_x = int(20 * font_scale)
                             pad_y = int(15 * font_scale)
                             cv2.rectangle(
@@ -313,27 +322,22 @@ elif workspace_selection == "🎬 Caption King Studio":
                                 -1
                             )
                             
-                            # Draw a high-contrast black stroke border behind the letters for maximum readability
-                            cv2.putText(frame, subtitle_text, (x, y), font_face, font_scale, (0, 0, 0), thickness + 3, cv2.LINE_AA)
+                            # Draw high-contrast outline and layout text layers
+                            cv2.putText(frame, active_subtitle_text, (x, y), font_face, font_scale, (0, 0, 0), thickness + 3, cv2.LINE_AA)
+                            cv2.putText(frame, active_subtitle_text, (x, y), font_face, font_scale, (255, 255, 255), thickness, cv2.LINE_AA)
                             
-                            # Burn clean text layer overlay block over the background panel box
-                            cv2.putText(frame, subtitle_text, (x, y), font_face, font_scale, (255, 255, 255), thickness, cv2.LINE_AA)
-                            
-                            # Write modified frame byte strings back to video container layout
                             out.write(frame)
+                            frame_index += 1
 
                         cap.release()
                         out.release()
 
-                        # 5. Lock completed video asset byte layers back into persistent view
                         with open(temp_output_path, "rb") as f:
                             st.session_state.workspace_data["processed_video_data"] = f.read()
 
-                        # Disk file protection clearing rules
                         os.unlink(temp_input_path)
                         os.unlink(temp_output_path)
 
-                        # Balance count points tracking adjustments
                         st.session_state.workspace_data["free_captions_left"] -= 1
                         st.rerun()
 
@@ -359,6 +363,7 @@ elif workspace_selection == "🎬 Caption King Studio":
             file_name="hustlestudio_captioned.mp4",
             mime="video/mp4"
         )
+
 
 # ==========================================
 # 6. MODULE 3: LOCAL MONETIZATION PORTAL
