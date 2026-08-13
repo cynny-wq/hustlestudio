@@ -233,3 +233,38 @@ elif workspace_selection == "🎬 Caption King Studio":
             """)
         else:
             st.error("❌ Please upload a valid MP4 file container before starting the rendering engine.")
+# ==========================================
+# 6. MODULE 3: LOCAL MONETIZATION PORTAL
+# ==========================================
+elif workspace_selection == "👤 Monetization Portal":
+    st.title("👤 Monetization Portal")
+    st.markdown("Unlock the full power of advanced media processing and custom styling suites.")
+    
+    st.markdown("### Choose Your Production Plan")
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown("""
+        <div style="background-color:#fff; padding:20px; border-radius:8px; border:1px solid #ddd; text-align:center; color: #333;">
+            <h4 style="color: #333;">🚀 Weekly Pass</h4>
+            <h2 style="color: #ff4b4b;">KSh 150</h2>
+            <p>Per Single Week Access</p>
+            <small>• Unlimited Subtitle Exports<br>• Full HD Processing Worker<br>• Direct M-Pesa STK Integration</small>
+        </div>
+        """, unsafe_allow_html=True)
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("Unlock Weekly Access Pass", key="pay_weekly"):
+            st.info("📲 Sending instant M-Pesa STK Push authorization prompt to your phone...")
+            
+    with col2:
+        st.markdown("""
+        <div style="background-color:#fff; padding:20px; border-radius:8px; border:2px solid #ff4b4b; text-align:center; color: #333;">
+            <h4 style="color: #333;">🏆 Creator Pro</h4>
+            <h2 style="color: #ff4b4b;">KSh 500</h2>
+            <p>Per Continuous Month</p>
+            <small>• Everything in Weekly Pass<br>• Multi-Dialect Subtitle Tracking<br>• Priority Background Processing Queues</small>
+        </div>
+        """, unsafe_allow_html=True)
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("Unlock Full Creator Pro Tier", key="pay_monthly"):
+            st.info("📲 Sending instant monthly recurring M-Pesa billing verification prompt...")
