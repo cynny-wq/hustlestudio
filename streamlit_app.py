@@ -7,7 +7,7 @@ import numpy as np
 
 
 # ============================================================
-# 1. CORE PAGE CONFIGURATION
+# 1. PAGE CONFIGURATION
 # ============================================================
 
 st.set_page_config(
@@ -40,15 +40,28 @@ div[data-baseweb="select"] {
     background-color: #f8f9fa;
     padding: 16px;
     border-radius: 8px;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
     border-left: 5px solid #ff4b4b;
+}
+
+.workflow-card {
+    background-color: #f8f9fa;
+    padding: 18px;
+    border-radius: 10px;
+    margin: 10px 0;
+    border: 1px solid #e5e5e5;
 }
 
 .usage-card {
     background-color: #f8f9fa;
-    padding: 12px;
+    padding: 10px;
     border-radius: 8px;
-    margin-bottom: 8px;
+    margin-bottom: 7px;
+}
+
+.small-note {
+    color: #777;
+    font-size: 14px;
 }
 
 </style>
@@ -62,18 +75,17 @@ div[data-baseweb="select"] {
 st.title("🚀 Hustle Studio")
 
 st.success(
-    "📱 **Hustler Tip:** Want this as a phone app? "
-    "Tap your browser settings (3 dots) and choose "
-    "'Add to Home Screen' to create a shortcut."
+    "📱 **Hustler Tip:** Tap your browser's 3 dots and "
+    "choose **Add to Home Screen** to use Hustle Studio like a phone app."
 )
 
 st.markdown(
-    "Standalone digital tools designed to help Kenyan content creators grow fast."
+    "Create better content faster — from idea to ready-to-post video."
 )
 
 
 # ============================================================
-# 4. FREE PLAN CONFIGURATION
+# 4. FREE PLAN
 # ============================================================
 
 FREE_LIMITS = {
@@ -85,33 +97,40 @@ FREE_LIMITS = {
 
 
 # ============================================================
-# 5. PERSISTENT SESSION WORKSPACE
+# 5. SESSION STATE
 # ============================================================
 
 if "workspace_data" not in st.session_state:
 
     st.session_state.workspace_data = {
+        "current_topic": "",
+        "selected_idea": "",
         "hooks": [],
+        "selected_hook": "",
         "script": "",
         "captions": "",
-        "current_topic": "",
         "processed_video_data": None,
 
-        # Free usage counters
-        "free_ideas_left": FREE_LIMITS["ideas"],
-        "free_hooks_left": FREE_LIMITS["hooks"],
-        "free_scripts_left": FREE_LIMITS["scripts"],
-        "free_captions_left": FREE_LIMITS["captions"],
+        "free_ideas_left": 10,
+        "free_hooks_left": 10,
+        "free_scripts_left": 5,
+        "free_captions_left": 3,
     }
 
 
-# Protect against older versions of the app
+# Protect older sessions
 defaults = {
-    "free_ideas_left": FREE_LIMITS["ideas"],
-    "free_hooks_left": FREE_LIMITS["hooks"],
-    "free_scripts_left": FREE_LIMITS["scripts"],
-    "free_captions_left": FREE_LIMITS["captions"],
+    "current_topic": "",
+    "selected_idea": "",
+    "hooks": [],
+    "selected_hook": "",
+    "script": "",
+    "captions": "",
     "processed_video_data": None,
+    "free_ideas_left": 10,
+    "free_hooks_left": 10,
+    "free_scripts_left": 5,
+    "free_captions_left": 3,
 }
 
 for key, value in defaults.items():
@@ -121,53 +140,42 @@ for key, value in defaults.items():
 
 
 # ============================================================
-# 6. HELPER FUNCTIONS
+# 6. USAGE FUNCTIONS
 # ============================================================
 
-def usage_available(usage_key):
-    """
-    Check whether the user still has free usage available.
-    """
-
-    return st.session_state.workspace_data[usage_key] > 0
+def usage_available(key):
+    return st.session_state.workspace_data[key] > 0
 
 
-def use_credit(usage_key):
-    """
-    Deduct one free usage credit.
-    """
-
-    if st.session_state.workspace_data[usage_key] > 0:
-        st.session_state.workspace_data[usage_key] -= 1
+def use_credit(key):
+    if st.session_state.workspace_data[key] > 0:
+        st.session_state.workspace_data[key] -= 1
         return True
 
     return False
 
 
-def show_upgrade_message(feature_name):
-    """
-    Display a consistent upgrade message.
-    """
-
+def upgrade_message(feature):
     st.error(
-        f"🔒 Your free {feature_name} limit has been reached."
+        f"🔒 Your free {feature} limit has been reached."
     )
 
     st.info(
-        "💰 Upgrade through the Monetization Portal when "
-        "paid plans are enabled."
+        "💰 Upgrade in the Monetization Portal when paid "
+        "plans are connected."
     )
 
 
 # ============================================================
-# 7. SIDEBAR NAVIGATION
+# 7. SIDEBAR
 # ============================================================
 
 st.sidebar.title("🚀 Hustle Studio")
+
 st.sidebar.markdown("---")
 
 workspace_selection = st.sidebar.radio(
-    "Navigate Workspace",
+    "Navigate",
     [
         "🧠 Strategy Studio",
         "🎬 Caption King Studio",
@@ -182,23 +190,19 @@ st.sidebar.markdown("### 🆓 Free Plan")
 st.sidebar.markdown(
     f"""
     <div class="usage-card">
-    💡 Content Ideas<br>
-    <strong>{st.session_state.workspace_data['free_ideas_left']}</strong> left
+    💡 Ideas: <strong>{st.session_state.workspace_data['free_ideas_left']}</strong> left
     </div>
 
     <div class="usage-card">
-    🔥 Hook Generations<br>
-    <strong>{st.session_state.workspace_data['free_hooks_left']}</strong> left
+    🔥 Hooks: <strong>{st.session_state.workspace_data['free_hooks_left']}</strong> left
     </div>
 
     <div class="usage-card">
-    📝 Script Generations<br>
-    <strong>{st.session_state.workspace_data['free_scripts_left']}</strong> left
+    📝 Scripts: <strong>{st.session_state.workspace_data['free_scripts_left']}</strong> left
     </div>
 
     <div class="usage-card">
-    🎬 Caption Exports<br>
-    <strong>{st.session_state.workspace_data['free_captions_left']}</strong> left
+    🎬 Captions: <strong>{st.session_state.workspace_data['free_captions_left']}</strong> left
     </div>
     """,
     unsafe_allow_html=True
@@ -207,8 +211,8 @@ st.sidebar.markdown(
 st.sidebar.markdown("---")
 
 st.sidebar.caption(
-    "Free limits reset when a new Streamlit session starts. "
-    "Account-based monthly limits will be added later."
+    "Current limits are session-based. "
+    "A real monthly account system will come later."
 )
 
 
@@ -221,19 +225,42 @@ if workspace_selection == "🧠 Strategy Studio":
     st.subheader("🧠 Strategy Studio")
 
     st.markdown(
-        "Go from an idea to a complete localized production roadmap."
+        "Your creator workflow: **Idea → Hook → Script → Caption**"
     )
 
-    # --------------------------------------------------------
-    # Niche and style
-    # --------------------------------------------------------
+    # ========================================================
+    # WORKFLOW STATUS
+    # ========================================================
+
+    st.markdown(
+        """
+        <div class="workflow-card">
+        <strong>🚀 CREATOR WORKFLOW</strong><br><br>
+        💡 Idea
+        →
+        🔥 Hook
+        →
+        📝 Script
+        →
+        🎬 Caption
+        →
+        📱 Post
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+
+    # ========================================================
+    # NICHE / STYLE
+    # ========================================================
 
     col1, col2 = st.columns(2)
 
     with col1:
 
         niche = st.selectbox(
-            "🎯 Select Video Niche",
+            "🎯 Video Niche",
             [
                 "General Hustle & Business",
                 "Fashion & Thrift (Mitumba/Bales)",
@@ -249,7 +276,7 @@ if workspace_selection == "🧠 Strategy Studio":
     with col2:
 
         style = st.selectbox(
-            "🎭 Select Delivery Style",
+            "🎭 Delivery Style",
             [
                 "Comedic / Local Vibe (Sheng Mix)",
                 "Energetic & Fast-Paced",
@@ -258,29 +285,22 @@ if workspace_selection == "🧠 Strategy Studio":
             ]
         )
 
-    topic = st.text_input(
-        "💡 What is your video topic?",
-        value=st.session_state.workspace_data["current_topic"],
-        placeholder="Example: Starting a business with KSh 5,000"
-    )
 
     # ========================================================
-    # CONTENT IDEA GENERATOR
+    # STEP 1 — CONTENT IDEA
     # ========================================================
 
     st.markdown("---")
-    st.subheader("💡 Content Idea Generator")
 
-    st.markdown(
-        "Don't know what to post? Generate quick content directions."
-    )
+    st.subheader("💡 Step 1: Find Your Content Idea")
 
     idea_topic = st.text_input(
-        "Enter a niche or topic for content ideas",
-        placeholder="Example: Kenyan football"
+        "What do you want to create content about?",
+        placeholder="Example: Starting a business with KSh 5,000",
+        key="idea_topic_input"
     )
 
-    if st.button("💡 Generate Content Ideas"):
+    if st.button("💡 Generate 10 Content Ideas"):
 
         if not idea_topic.strip():
 
@@ -288,503 +308,452 @@ if workspace_selection == "🧠 Strategy Studio":
 
         elif not usage_available("free_ideas_left"):
 
-            show_upgrade_message("content idea")
+            upgrade_message("content idea generations")
 
         else:
 
             use_credit("free_ideas_left")
 
-            clean_idea_topic = idea_topic.strip()
+            clean_topic = idea_topic.strip()
 
             ideas = [
-                f"3 mistakes people make when starting {clean_idea_topic}",
-                f"The truth nobody tells you about {clean_idea_topic}",
-                f"How I would start {clean_idea_topic} with KSh 5,000",
-                f"5 things I wish I knew before starting {clean_idea_topic}",
-                f"Stop doing this if you want to succeed in {clean_idea_topic}",
-                f"Beginner vs expert: {clean_idea_topic}",
-                f"Can you actually make money with {clean_idea_topic}?",
-                f"The biggest scam people should avoid in {clean_idea_topic}",
-                f"A day in the life of someone doing {clean_idea_topic}",
-                f"Things nobody warns you about when entering {clean_idea_topic}"
+                f"3 mistakes beginners make with {clean_topic}",
+
+                f"The truth nobody tells you about {clean_topic}",
+
+                f"How I would start {clean_topic} with KSh 5,000",
+
+                f"5 things I wish I knew before starting {clean_topic}",
+
+                f"Stop doing this if you want to succeed with {clean_topic}",
+
+                f"Beginner vs expert: {clean_topic}",
+
+                f"Can you actually make money from {clean_topic}?",
+
+                f"The biggest mistake people make with {clean_topic}",
+
+                f"A day in the life of someone doing {clean_topic}",
+
+                f"What nobody warns you about {clean_topic}"
             ]
 
-            st.session_state.workspace_data["idea_results"] = ideas
+            st.session_state.workspace_data[
+                "idea_results"
+            ] = ideas
 
             st.success(
-                f"Generated 10 ideas. "
-                f"You have {st.session_state.workspace_data['free_ideas_left']} "
-                f"free idea generations left."
-            )
-
-    if "idea_results" in st.session_state.workspace_data:
-
-        st.markdown("### 🚀 Your Content Ideas")
-
-        for index, idea in enumerate(
-            st.session_state.workspace_data["idea_results"],
-            start=1
-        ):
-
-            st.markdown(
-                f"<div class='result-card'>"
-                f"<strong>Idea #{index}</strong><br>{idea}"
-                f"</div>",
-                unsafe_allow_html=True
+                f"10 ideas generated! "
+                f"You have "
+                f"{st.session_state.workspace_data['free_ideas_left']} "
+                f"idea generation(s) left."
             )
 
 
     # ========================================================
-    # COMPLETE PRODUCTION PACKAGE
+    # DISPLAY IDEAS
+    # ========================================================
+
+    if "idea_results" in st.session_state.workspace_data:
+
+        st.markdown("### 🚀 Choose an Idea")
+
+        for index, idea in enumerate(
+            st.session_state.workspace_data["idea_results"]
+        ):
+
+            st.markdown(
+                f"""
+                <div class="result-card">
+                <strong>Idea #{index + 1}</strong><br>
+                {idea}
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+            if st.button(
+                f"🔥 Use Idea #{index + 1}",
+                key=f"use_idea_{index}"
+            ):
+
+                st.session_state.workspace_data[
+                    "selected_idea"
+                ] = idea
+
+                st.session_state.workspace_data[
+                    "current_topic"
+                ] = idea
+
+                st.success(
+                    "✅ Idea selected! Scroll down to generate hooks."
+                )
+
+
+    # ========================================================
+    # SELECTED IDEA
+    # ========================================================
+
+    selected_idea = st.session_state.workspace_data[
+        "selected_idea"
+    ]
+
+    if selected_idea:
+
+        st.markdown("---")
+
+        st.subheader("✅ Your Selected Idea")
+
+        st.markdown(
+            f"""
+            <div class="workflow-card">
+            <strong>{selected_idea}</strong>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+
+    # ========================================================
+    # STEP 2 — HOOKS
     # ========================================================
 
     st.markdown("---")
 
-    if st.button("🔥 Generate Complete Production Package"):
+    st.subheader("🔥 Step 2: Generate Your Hook")
 
-        if not topic.strip():
+    hook_topic = st.text_input(
+        "Topic for your hooks",
+        value=st.session_state.workspace_data["current_topic"],
+        key="hook_topic_input"
+    )
 
-            st.warning(
-                "⚠️ Please provide a video topic first."
-            )
+    if st.button("🔥 Generate 5 Viral Hooks"):
+
+        if not hook_topic.strip():
+
+            st.warning("⚠️ Select an idea or enter a topic.")
+
+        elif not usage_available("free_hooks_left"):
+
+            upgrade_message("hook generations")
 
         else:
 
-            # ------------------------------------------------
-            # Check both hook and script limits
-            # ------------------------------------------------
+            use_credit("free_hooks_left")
 
-            if not usage_available("free_hooks_left"):
+            clean_topic = hook_topic.strip()
 
-                show_upgrade_message("hook")
+            st.session_state.workspace_data[
+                "current_topic"
+            ] = clean_topic
 
-            elif not usage_available("free_scripts_left"):
+            hooks = [
+                f"STOP scrolling! Nobody tells you this about {clean_topic}.",
 
-                show_upgrade_message("script")
+                f"Mbona nobody is talking about {clean_topic}?",
 
-            else:
+                f"If I had to start {clean_topic} from zero, here's what I'd do.",
 
-                clean_topic = topic.strip()
+                f"Umeanza {clean_topic}? Don't make this mistake.",
+
+                f"The biggest mistake people make with {clean_topic} is this..."
+            ]
+
+            st.session_state.workspace_data[
+                "hooks"
+            ] = hooks
+
+            st.success(
+                f"Hooks generated! "
+                f"{st.session_state.workspace_data['free_hooks_left']} "
+                f"hook generation(s) remaining."
+            )
+
+
+    # ========================================================
+    # DISPLAY HOOKS
+    # ========================================================
+
+    if st.session_state.workspace_data["hooks"]:
+
+        st.markdown("### 🎯 Choose Your Hook")
+
+        for index, hook in enumerate(
+            st.session_state.workspace_data["hooks"]
+        ):
+
+            st.markdown(
+                f"""
+                <div class="result-card">
+                <strong>Hook #{index + 1}</strong><br>
+                {hook}
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+            if st.button(
+                f"📝 Use Hook #{index + 1}",
+                key=f"use_hook_{index}"
+            ):
 
                 st.session_state.workspace_data[
-                    "current_topic"
-                ] = clean_topic
-
-                # Deduct credits only when generation starts
-                use_credit("free_hooks_left")
-                use_credit("free_scripts_left")
-
-
-                # ============================================
-                # HOOK GENERATION
-                # ============================================
-
-                hooks = [
-                    f"USIWAHI jaribu {clean_topic} hapa Kenya kabla ujue hii siri...",
-
-                    f"Mbona hakuna mtu anakuambia ukweli kuhusu {clean_topic}?",
-
-                    f"Hii hapa siri ya {clean_topic} yenye watu wengi hawataki ujue.",
-
-                    f"Umechoka kuhustle na {clean_topic} na haupati matokeo? "
-                    f"Hapa ndio mistake unafanya...",
-
-                    f"Kama ungeanza {clean_topic} leo, hii ndio kitu "
-                    f"ningekuambia kwanza."
-                ]
-
-
-                # ============================================
-                # SCRIPT VARIABLES
-                # ============================================
-
-                script_body = ""
-                cta_text = ""
-                hashtags = ""
-
-
-                # ============================================
-                # MITUMBA
-                # ============================================
-
-                if niche == "Fashion & Thrift (Mitumba/Bales)":
-
-                    hashtags = (
-                        "#MitumbaKenya #Gikomba #NairobiFashion "
-                        "#ThriftKE #Biashara"
-                    )
-
-                    if style == "Comedic / Local Vibe (Sheng Mix)":
-
-                        script_body = (
-                            f"Wasee wanadhani kuuza {clean_topic} "
-                            f"ni kwenda tu Gikomba mapema kuchagua nguo. "
-                            f"Ukweli ni kwamba unapigwa character development "
-                            f"na supplier usipochunga!"
-                        )
-
-                        cta_text = (
-                            "Kama unataka tips za kupata pieces safi, "
-                            "nifollow sasa hivi!"
-                        )
-
-                    elif style == "Energetic & Fast-Paced":
-
-                        script_body = (
-                            f"Stop scrolling! Most people fail at "
-                            f"{clean_topic} because they focus on cheap stock "
-                            f"instead of quality pieces."
-                        )
-
-                        cta_text = (
-                            "Follow for more Kenyan business tips!"
-                        )
-
-                    elif style == "Storytelling & Emotional":
-
-                        script_body = (
-                            f"When I first started looking into "
-                            f"{clean_topic}, I made expensive mistakes. "
-                            f"Nobody explained the real process to me."
-                        )
-
-                        cta_text = (
-                            "Follow so you can avoid the mistakes I made."
-                        )
-
-                    else:
-
-                        script_body = (
-                            f"When evaluating {clean_topic}, "
-                            f"focus on inventory velocity, margins "
-                            f"and customer demand."
-                        )
-
-                        cta_text = (
-                            "Follow for more business insights."
-                        )
-
-
-                # ============================================
-                # REAL ESTATE
-                # ============================================
-
-                elif niche == "Real Estate & Housing (Bedsitters/Apartments)":
-
-                    hashtags = (
-                        "#NairobiRentals #Kilimani "
-                        "#BedsitterChronicles #Roysambu #KenyaRealEstate"
-                    )
-
-                    if style == "Comedic / Local Vibe (Sheng Mix)":
-
-                        script_body = (
-                            f"Ukitafuta keja Nairobi, ma-agent watakuambia "
-                            f"place iko five minutes from the highway. "
-                            f"Ukifika unapata ni safari mzima!"
-                        )
-
-                        cta_text = (
-                            "Drop your budget and let's talk!"
-                        )
-
-                    elif style == "Energetic & Fast-Paced":
-
-                        script_body = (
-                            f"Before you pay a deposit for {clean_topic}, "
-                            f"check water, security and electricity first."
-                        )
-
-                        cta_text = (
-                            "Share this with someone looking for a house."
-                        )
-
-                    elif style == "Storytelling & Emotional":
-
-                        script_body = (
-                            "Moving into my first apartment felt like a dream "
-                            "until hidden costs started appearing."
-                        )
-
-                        cta_text = (
-                            "Follow for more real estate lessons."
-                        )
-
-                    else:
-
-                        script_body = (
-                            f"When evaluating {clean_topic}, "
-                            f"calculate total monthly costs, not just rent."
-                        )
-
-                        cta_text = (
-                            "Follow for more property insights."
-                        )
-
-
-                # ============================================
-                # FOOD
-                # ============================================
-
-                elif niche == "Food & Cooking (Pilau/Local Recipes)":
-
-                    hashtags = (
-                        "#KenyanFood #PilauSecrets "
-                        "#NairobiEats #SwahiliCooking #Chapo"
-                    )
-
-                    script_body = (
-                        f"Siri ya {clean_topic} kunoga sio kuweka viungo "
-                        f"mingi sana. Ni timing! Ukikimbiza moto, "
-                        f"unapoteza ile ladha halisi."
-                    )
-
-                    cta_text = (
-                        "Follow for more Kenyan recipes!"
-                    )
-
-
-                # ============================================
-                # TECH
-                # ============================================
-
-                elif niche == "Tech & Gadget Reviews":
-
-                    hashtags = (
-                        "#TechKenya #NairobiGadgets "
-                        "#iPhoneKenya #AndroidKE #Unboxing"
-                    )
-
-                    script_body = (
-                        f"Wasee wengi wanatumia pesa kwa specs "
-                        f"ambazo hawatawahi kutumia. Before buying "
-                        f"{clean_topic}, focus on what you actually need."
-                    )
-
-                    cta_text = (
-                        "Comment the phone you're using!"
-                    )
-
-
-                # ============================================
-                # FOOTBALL
-                # ============================================
-
-                elif niche == "Football & Sports":
-
-                    hashtags = (
-                        "#FootballKenya #KenyaFootball "
-                        "#FootballTikTok #SportsKE"
-                    )
-
-                    script_body = (
-                        f"Wasee wengi wanaangalia {clean_topic} "
-                        f"lakini hawajui hii part muhimu. "
-                        f"Kama unataka kuboresha game yako, "
-                        f"focus on consistency and smart training."
-                    )
-
-                    cta_text = (
-                        "Follow for more football content!"
-                    )
-
-
-                # ============================================
-                # BEAUTY
-                # ============================================
-
-                elif niche == "Beauty & Lifestyle":
-
-                    hashtags = (
-                        "#BeautyKenya #KenyanCreators "
-                        "#LifestyleKE #NairobiBeauty"
-                    )
-
-                    script_body = (
-                        f"If you're trying {clean_topic}, "
-                        f"don't just copy what you see online. "
-                        f"Find what actually works for you."
-                    )
-
-                    cta_text = (
-                        "Follow for more beauty and lifestyle tips."
-                    )
-
-
-                # ============================================
-                # MOTIVATION
-                # ============================================
-
-                elif niche == "Motivation & Personal Growth":
-
-                    hashtags = (
-                        "#MotivationKenya #GrowthMindset "
-                        "#KenyanCreators #HustleKE"
-                    )
-
-                    script_body = (
-                        f"Most people wait until everything is perfect "
-                        f"before starting {clean_topic}. "
-                        f"The truth is, you learn by starting."
-                    )
-
-                    cta_text = (
-                        "Follow if you're building something from zero."
-                    )
-
-
-                # ============================================
-                # GENERAL BUSINESS
-                # ============================================
-
-                else:
-
-                    hashtags = (
-                        "#NairobiHustle #BiasharaMkononi "
-                        "#KenyanCreators #HustleKE"
-                    )
-
-                    if style == "Comedic / Local Vibe (Sheng Mix)":
-
-                        script_body = (
-                            f"Wasee wengi wanadhani kuingia kwa "
-                            f"{clean_topic} ni kubahatisha tu. "
-                            f"Ukikosa strategy safi ya kucheza na wateja, "
-                            f"utajipata unarudi nyuma."
-                        )
-
-                        cta_text = (
-                            "Follow for more Kenyan hustle tips!"
-                        )
-
-                    else:
-
-                        script_body = (
-                            f"Success with {clean_topic} doesn't happen "
-                            f"by chance. You need a clear strategy, "
-                            f"consistent execution and attention to customers."
-                        )
-
-                        cta_text = (
-                            "Follow for more business strategies."
-                        )
-
-
-                # ============================================
-                # SAVE GENERATED PACKAGE
-                # ============================================
-
-                st.session_state.workspace_data["hooks"] = hooks
-
-                st.session_state.workspace_data["script"] = f"""
-### 📝 STRUCTURED SCRIPT ROADMAP
-
-#### 🚨 Phase 1: The Hook
-
-**Selected Hook:**
-
-{hooks[0]}
-
-Speak with energy during the first 3 seconds.
-
-#### 📦 Phase 2: The Core Body
-
-**Visual Direction:**
-
-Mid-shot framing. Look directly into the mobile camera.
-
-**Script:**
-
-{script_body}
-
-#### 🎬 Phase 3: Pacing & Direction
-
-- Cut or change visual every few seconds.
-- Add on-screen text for important keywords.
-- Keep the background clean.
-- Avoid long introductions.
-- Get to the value quickly.
-
-#### 🎯 Phase 4: Call To Action
-
-{cta_text}
-"""
-
-                st.session_state.workspace_data["captions"] = (
-                    f"🎯 The truth about {clean_topic} "
-                    f"that nobody shares... 🤫\n\n"
-                    f"Watch till the end!\n\n"
-                    f"🏷️ Viral Tag Pack:\n"
-                    f"{hashtags}\n"
-                    f"#ContentCreatorKE"
-                )
+                    "selected_hook"
+                ] = hook
 
                 st.success(
-                    "🚀 Production package generated!"
-                )
-
-                st.info(
-                    f"Free usage remaining — "
-                    f"Hooks: {st.session_state.workspace_data['free_hooks_left']} | "
-                    f"Scripts: {st.session_state.workspace_data['free_scripts_left']}"
+                    "✅ Hook selected! Generate your script below."
                 )
 
 
     # ========================================================
-    # DISPLAY PRODUCTION PACKAGE
+    # SELECTED HOOK
+    # ========================================================
+
+    selected_hook = st.session_state.workspace_data[
+        "selected_hook"
+    ]
+
+    if selected_hook:
+
+        st.markdown("---")
+
+        st.subheader("🔥 Selected Hook")
+
+        st.markdown(
+            f"""
+            <div class="workflow-card">
+            {selected_hook}
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+
+    # ========================================================
+    # STEP 3 — SCRIPT
+    # ========================================================
+
+    st.markdown("---")
+
+    st.subheader("📝 Step 3: Build Your Script")
+
+    script_topic = st.session_state.workspace_data[
+        "current_topic"
+    ]
+
+    script_hook = st.session_state.workspace_data[
+        "selected_hook"
+    ]
+
+    if not script_hook:
+
+        st.info(
+            "👆 Choose a hook above first."
+        )
+
+    if st.button("📝 Generate My Script"):
+
+        if not script_hook:
+
+            st.warning(
+                "⚠️ Select a hook before generating the script."
+            )
+
+        elif not usage_available("free_scripts_left"):
+
+            upgrade_message("script generations")
+
+        else:
+
+            use_credit("free_scripts_left")
+
+            # ----------------------------------------------
+            # SCRIPT BODY
+            # ----------------------------------------------
+
+            if style == "Comedic / Local Vibe (Sheng Mix)":
+
+                body = (
+                    f"Wasee wengi wanaingia kwa {script_topic} "
+                    f"wakidhani ni rahisi. Lakini kuna mistake moja "
+                    f"ambayo inaweza kukupotezea time na pesa."
+                )
+
+                cta = (
+                    "Follow Hustle Studio for more practical "
+                    "Kenyan creator and hustle tips."
+                )
+
+            elif style == "Energetic & Fast-Paced":
+
+                body = (
+                    f"Here's what you need to know about "
+                    f"{script_topic}. First, understand the basics. "
+                    f"Second, avoid the common mistakes. "
+                    f"Third, stay consistent."
+                )
+
+                cta = (
+                    "Follow for more quick tips."
+                )
+
+            elif style == "Storytelling & Emotional":
+
+                body = (
+                    f"When I first started learning about "
+                    f"{script_topic}, I quickly realized that "
+                    f"most people only show the success. "
+                    f"They don't show the mistakes behind it."
+                )
+
+                cta = (
+                    "Follow to see the real journey."
+                )
+
+            else:
+
+                body = (
+                    f"When approaching {script_topic}, "
+                    f"focus on the fundamentals first. "
+                    f"Then build a consistent process "
+                    f"that you can repeat."
+                )
+
+                cta = (
+                    "Follow for more practical strategies."
+                )
+
+
+            script = f"""
+## 🚨 HOOK
+
+{script_hook}
+
+## 📦 BODY
+
+{body}
+
+## 🎬 VISUAL INSTRUCTIONS
+
+**Shot 1 — 0-3 seconds**
+
+Look directly at the camera and deliver the hook.
+
+**Shot 2 — 3-15 seconds**
+
+Show yourself explaining the main point.
+
+**Shot 3 — 15-30 seconds**
+
+Show an example, product, location, screen recording,
+or demonstration.
+
+**Shot 4 — Final seconds**
+
+Return to the camera and deliver the CTA.
+
+## 🎯 CALL TO ACTION
+
+{cta}
+
+## 🎥 RECORDING TIP
+
+Keep the camera vertical.
+
+Use good lighting.
+
+Remove unnecessary pauses.
+
+Change your visual every few seconds.
+
+Add captions when editing.
+"""
+
+            st.session_state.workspace_data[
+                "script"
+            ] = script
+
+            st.success(
+                f"🎉 Script ready! "
+                f"{st.session_state.workspace_data['free_scripts_left']} "
+                f"script generation(s) remaining."
+            )
+
+
+    # ========================================================
+    # DISPLAY SCRIPT
     # ========================================================
 
     if st.session_state.workspace_data["script"]:
 
         st.markdown("---")
 
-        st.subheader(
-            "🚀 Your Complete Production Strategy Package"
+        st.subheader("🎬 Your Script")
+
+        st.markdown(
+            st.session_state.workspace_data["script"]
         )
 
-        with st.expander(
-            "💡 1. Localized Hook Variations",
-            expanded=True
-        ):
 
-            for index, hook in enumerate(
-                st.session_state.workspace_data["hooks"],
-                start=1
-            ):
+        # ====================================================
+        # STEP 4 — SOCIAL CAPTION
+        # ====================================================
 
-                st.markdown(
-                    f"<div class='result-card'>"
-                    f"<strong>Hook Option #{index}:</strong><br>"
-                    f"{hook}"
-                    f"</div>",
-                    unsafe_allow_html=True
-                )
+        st.markdown("---")
 
+        st.subheader("📲 Step 4: Ready-To-Post Caption")
 
-        with st.expander(
-            "📝 2. High-Retention Script & Video Direction",
-            expanded=True
-        ):
+        current_topic = st.session_state.workspace_data[
+            "current_topic"
+        ]
 
-            st.markdown(
-                st.session_state.workspace_data["script"]
-            )
+        social_caption = f"""
+🔥 {current_topic}
 
+Most people don't realize this until it's too late.
 
-        with st.expander(
-            "📲 3. Social Media Optimization Kit",
-            expanded=True
-        ):
+Watch till the end and let me know what you think 👇
 
-            st.text_area(
-                "Copy Caption Pack:",
-                value=st.session_state.workspace_data["captions"],
-                height=150
-            )
+Follow for more practical content.
+
+#Kenya #KenyanCreators #HustleKE #ContentCreator
+"""
+
+        st.session_state.workspace_data[
+            "captions"
+        ] = social_caption
+
+        st.text_area(
+            "Copy this caption:",
+            value=social_caption,
+            height=180
+        )
+
+        st.success(
+            "🎉 Your idea has now become a complete content package!"
+        )
+
+        st.markdown(
+            """
+            ### 🚀 Your next step
+
+            **1. Record your video**
+
+            **2. Open 🎬 Caption King Studio**
+
+            **3. Upload your video**
+
+            **4. Add your captions**
+
+            **5. Download and post**
+            """
+        )
 
 
 # ============================================================
-# 9. CAPTION KING
+# 9. CAPTION KING STUDIO
 # ============================================================
 
 elif workspace_selection == "🎬 Caption King Studio":
@@ -792,21 +761,17 @@ elif workspace_selection == "🎬 Caption King Studio":
     st.title("🎬 Caption King Studio")
 
     st.markdown(
-        "Burn stylized text directly into your short-form video."
+        "Turn your recorded video into a captioned short-form video."
     )
 
-    trials_left = (
-        st.session_state.workspace_data[
-            "free_captions_left"
-        ]
-    )
+    trials_left = st.session_state.workspace_data[
+        "free_captions_left"
+    ]
 
     if trials_left > 0:
 
         st.success(
-            f"🎁 **Free Trial Active:** "
-            f"You have **{trials_left} out of "
-            f"{FREE_LIMITS['captions']}** free caption exports left."
+            f"🎁 You have **{trials_left}** free caption export(s) remaining."
         )
 
     else:
@@ -816,7 +781,7 @@ elif workspace_selection == "🎬 Caption King Studio":
         )
 
         st.info(
-            "💡 Visit the Monetization Portal to view upgrade options."
+            "Visit the Monetization Portal to view upgrade options."
         )
 
 
@@ -853,37 +818,37 @@ elif workspace_selection == "🎬 Caption King Studio":
     with col3:
 
         accent_color = st.color_picker(
-            "Accent Highlight Color",
+            "Accent Color",
             "#FF4B4B"
         )
 
 
-    if st.button("🎬 Run Subtitle Generation"):
+    if st.button("🎬 Create Captioned Video"):
 
         if uploaded_video is None:
 
             st.error(
-                "❌ Please upload a valid MP4 video first."
+                "❌ Please upload a video first."
             )
 
         elif not usage_available("free_captions_left"):
 
-            show_upgrade_message("caption export")
+            upgrade_message("caption exports")
 
         else:
 
             with st.spinner(
-                "🧠 Processing your video..."
+                "🎬 Processing your video..."
             ):
 
                 temp_input_path = None
-                temp_silent_video_path = None
-                temp_final_mux_path = None
+                temp_silent_path = None
+                temp_final_path = None
 
                 try:
 
                     # ----------------------------------------
-                    # SAVE INPUT VIDEO
+                    # SAVE INPUT
                     # ----------------------------------------
 
                     with tempfile.NamedTemporaryFile(
@@ -928,10 +893,10 @@ elif workspace_selection == "🎬 Caption King Studio":
 
 
                     # ----------------------------------------
-                    # OUTPUT VIDEO
+                    # OUTPUT
                     # ----------------------------------------
 
-                    temp_silent_video_path = tempfile.mktemp(
+                    temp_silent_path = tempfile.mktemp(
                         suffix=".mp4"
                     )
 
@@ -940,7 +905,7 @@ elif workspace_selection == "🎬 Caption King Studio":
                     )
 
                     out = cv2.VideoWriter(
-                        temp_silent_video_path,
+                        temp_silent_path,
                         fourcc,
                         fps,
                         (width, height)
@@ -952,20 +917,11 @@ elif workspace_selection == "🎬 Caption King Studio":
                     # ----------------------------------------
 
                     subtitle_text = (
-                        "Hustle Studio Content"
-                    )
-
-                    current_topic = (
                         st.session_state.workspace_data[
                             "current_topic"
                         ]
+                        or "Hustle Studio"
                     )
-
-                    if current_topic:
-
-                        subtitle_text = (
-                            f"Siri ya {current_topic} Kenya!"
-                        )
 
 
                     # ----------------------------------------
@@ -987,8 +943,6 @@ elif workspace_selection == "🎬 Caption King Studio":
                     # FONT
                     # ----------------------------------------
 
-                    font_face = cv2.FONT_HERSHEY_SIMPLEX
-
                     if font_style == "Impact Bold":
 
                         font_face = cv2.FONT_HERSHEY_TRIPLEX
@@ -997,7 +951,7 @@ elif workspace_selection == "🎬 Caption King Studio":
 
                         font_face = cv2.FONT_HERSHEY_DUPLEX
 
-                    elif font_style == "Sheng Modern":
+                    else:
 
                         font_face = cv2.FONT_HERSHEY_COMPLEX
 
@@ -1014,7 +968,7 @@ elif workspace_selection == "🎬 Caption King Studio":
 
 
                     # ----------------------------------------
-                    # FRAME PROCESSING
+                    # FRAME LOOP
                     # ----------------------------------------
 
                     while cap.isOpened():
@@ -1085,7 +1039,7 @@ elif workspace_selection == "🎬 Caption King Studio":
                         )
 
 
-                        # Black outline
+                        # Outline
                         cv2.putText(
                             frame,
                             subtitle_text,
@@ -1098,7 +1052,7 @@ elif workspace_selection == "🎬 Caption King Studio":
                         )
 
 
-                        # White text
+                        # Text
                         cv2.putText(
                             frame,
                             subtitle_text,
@@ -1122,7 +1076,7 @@ elif workspace_selection == "🎬 Caption King Studio":
                     # RESTORE AUDIO
                     # ----------------------------------------
 
-                    temp_final_mux_path = tempfile.mktemp(
+                    temp_final_path = tempfile.mktemp(
                         suffix=".mp4"
                     )
 
@@ -1130,7 +1084,7 @@ elif workspace_selection == "🎬 Caption King Studio":
                         "ffmpeg",
                         "-y",
                         "-i",
-                        temp_silent_video_path,
+                        temp_silent_path,
                         "-i",
                         temp_input_path,
                         "-map",
@@ -1144,9 +1098,8 @@ elif workspace_selection == "🎬 Caption King Studio":
                         "-c:a",
                         "aac",
                         "-shortest",
-                        temp_final_mux_path
+                        temp_final_path
                     ]
-
 
                     subprocess.run(
                         ffmpeg_cmd,
@@ -1157,11 +1110,11 @@ elif workspace_selection == "🎬 Caption King Studio":
 
 
                     # ----------------------------------------
-                    # STORE OUTPUT
+                    # SAVE VIDEO IN SESSION
                     # ----------------------------------------
 
                     with open(
-                        temp_final_mux_path,
+                        temp_final_path,
                         "rb"
                     ) as video_file:
 
@@ -1170,17 +1123,14 @@ elif workspace_selection == "🎬 Caption King Studio":
                         ] = video_file.read()
 
 
-                    # ----------------------------------------
-                    # DEDUCT CREDIT ONLY AFTER SUCCESS
-                    # ----------------------------------------
-
+                    # Only charge after successful processing
                     use_credit(
                         "free_captions_left"
                     )
 
 
                     st.success(
-                        "🎉 Captioned video created successfully!"
+                        "🎉 Your captioned video is ready!"
                     )
 
                     st.rerun()
@@ -1189,20 +1139,16 @@ elif workspace_selection == "🎬 Caption King Studio":
                 except Exception as error:
 
                     st.error(
-                        f"❌ Video Processing Error: {error}"
+                        f"❌ Video processing error: {error}"
                     )
 
 
                 finally:
 
-                    # ----------------------------------------
-                    # CLEAN TEMP FILES
-                    # ----------------------------------------
-
                     for temp_path in [
                         temp_input_path,
-                        temp_silent_video_path,
-                        temp_final_mux_path
+                        temp_silent_path,
+                        temp_final_path
                     ]:
 
                         if temp_path and os.path.exists(
@@ -1210,29 +1156,22 @@ elif workspace_selection == "🎬 Caption King Studio":
                         ):
 
                             try:
-
                                 os.unlink(temp_path)
-
                             except Exception:
-
                                 pass
 
 
     # ========================================================
-    # OUTPUT VIDEO
+    # VIDEO OUTPUT
     # ========================================================
 
-    if (
-        st.session_state.workspace_data[
-            "processed_video_data"
-        ] is not None
-    ):
+    if st.session_state.workspace_data[
+        "processed_video_data"
+    ] is not None:
 
         st.markdown("---")
 
-        st.success(
-            "🎉 Your captioned video is ready!"
-        )
+        st.subheader("🎉 Your Finished Video")
 
         st.video(
             st.session_state.workspace_data[
@@ -1241,7 +1180,7 @@ elif workspace_selection == "🎬 Caption King Studio":
         )
 
         st.download_button(
-            label="📥 Download Subtitled Video",
+            label="📥 Download Captioned Video",
             data=st.session_state.workspace_data[
                 "processed_video_data"
             ],
@@ -1259,18 +1198,18 @@ elif workspace_selection == "👤 Monetization Portal":
     st.title("👤 Monetization Portal")
 
     st.markdown(
-        "Unlock more tools and higher usage limits."
+        "Choose the plan that matches your creator workflow."
     )
 
 
     # ========================================================
-    # FREE PLAN
+    # FREE
     # ========================================================
 
-    st.subheader("🆓 Free Strategy Plan")
+    st.subheader("🆓 Free")
 
     st.markdown(
-        f"""
+        """
         <div style="
             background-color:#f8f9fa;
             padding:20px;
@@ -1279,16 +1218,16 @@ elif workspace_selection == "👤 Monetization Portal":
             color:#222;
         ">
 
-        <h3>Free</h3>
+        <h3>Free Creator</h3>
 
-        <p>Perfect for trying Hustle Studio.</p>
+        <p>Try the Hustle Studio workflow.</p>
 
         <ul>
             <li>10 content idea generations</li>
             <li>10 hook generations</li>
             <li>5 script generations</li>
             <li>3 caption exports</li>
-            <li>Mobile-friendly creator workflow</li>
+            <li>Mobile-friendly workflow</li>
         </ul>
 
         </div>
@@ -1301,35 +1240,34 @@ elif workspace_selection == "👤 Monetization Portal":
 
 
     # ========================================================
-    # WEEKLY PLAN
+    # WEEKLY
     # ========================================================
 
-    st.subheader("🚀 Weekly Pass")
+    st.subheader("🚀 Hustler Weekly")
 
     st.markdown(
         """
         <div style="
             background-color:#fff;
             padding:20px;
-            border-radius:8px;
+            border-radius:10px;
             border:1px solid #ddd;
             text-align:center;
             color:#333;
         ">
 
-        <h3>🚀 Weekly Pass</h3>
+        <h3>🚀 Hustler Weekly</h3>
 
-        <h2 style="color:#ff4b4b;">
-        KSh 150
-        </h2>
+        <h2>KSh 150</h2>
 
-        <p>7 days of creator tools</p>
+        <p>7 days of higher creator limits.</p>
 
         <p>
-        • Higher usage limits<br>
-        • More subtitle exports<br>
-        • Full creator workflow<br>
-        • Priority processing when available
+        • More ideas<br>
+        • More hooks<br>
+        • More scripts<br>
+        • More caption exports<br>
+        • Full creator workflow
         </p>
 
         </div>
@@ -1339,13 +1277,13 @@ elif workspace_selection == "👤 Monetization Portal":
 
 
     if st.button(
-        "Unlock Weekly Access Pass",
-        key="pay_weekly"
+        "🚀 Unlock Weekly Plan",
+        key="weekly_payment"
     ):
 
         st.info(
-            "📲 M-Pesa payment integration will be connected "
-            "in the next monetization stage."
+            "📲 M-Pesa payment integration will be added "
+            "in the monetization stage."
         )
 
 
@@ -1353,7 +1291,7 @@ elif workspace_selection == "👤 Monetization Portal":
 
 
     # ========================================================
-    # PRO PLAN
+    # PRO
     # ========================================================
 
     st.subheader("🏆 Creator Pro")
@@ -1363,7 +1301,7 @@ elif workspace_selection == "👤 Monetization Portal":
         <div style="
             background-color:#fff;
             padding:20px;
-            border-radius:8px;
+            border-radius:10px;
             border:2px solid #ff4b4b;
             text-align:center;
             color:#333;
@@ -1371,18 +1309,16 @@ elif workspace_selection == "👤 Monetization Portal":
 
         <h3>🏆 Creator Pro</h3>
 
-        <h2 style="color:#ff4b4b;">
-        KSh 500
-        </h2>
+        <h2>KSh 500 / month</h2>
 
-        <p>Per month</p>
+        <p>For serious creators.</p>
 
         <p>
-        • Higher AI usage<br>
-        • More caption exports<br>
+        • High AI limits<br>
+        • More video exports<br>
         • Advanced creator tools<br>
         • Priority processing<br>
-        • Future analytics features
+        • Future analytics
         </p>
 
         </div>
@@ -1392,13 +1328,13 @@ elif workspace_selection == "👤 Monetization Portal":
 
 
     if st.button(
-        "Unlock Creator Pro",
-        key="pay_monthly"
+        "🏆 Unlock Creator Pro",
+        key="pro_payment"
     ):
 
         st.info(
             "📲 M-Pesa subscription integration will be "
-            "connected in the next monetization stage."
+            "added in the monetization stage."
         )
 
 
@@ -1409,5 +1345,5 @@ elif workspace_selection == "👤 Monetization Portal":
 st.markdown("---")
 
 st.caption(
-    "🚀 Hustle Studio — Built for creators who want to hustle smarter."
+    "🚀 Hustle Studio — Idea → Hook → Script → Caption → Post"
 )
