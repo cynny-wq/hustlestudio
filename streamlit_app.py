@@ -1,6 +1,3 @@
-
-
-
 import streamlit as st
 import os
 import tempfile
@@ -710,16 +707,36 @@ if page == "🎙️ AI Subtitles":
             input_path = None
             audio_path = None
             output_path = None
-            ass_path = None
+            srt_path = None
+            text_paths = []
 
             try:
 
+                # --------------------------------------------------------
+                # 1. Check FFmpeg first
+                # --------------------------------------------------------
+                try:
+                    ffmpeg_check = subprocess.run(
+                        ["ffmpeg", "-version"],
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        text=True,
+                        check=True
+                    )
+                except Exception:
+                    raise RuntimeError(
+                        "FFmpeg is not installed on the Streamlit server. "
+                        "Add FFmpeg to the deployment environment before "
+                        "using video caption burning."
+                    )
+
+                # --------------------------------------------------------
+                # 2. Save uploaded video
+                # --------------------------------------------------------
                 with st.spinner(
-                    "🎙️ Loading Whisper and transcribing your video..."
+                    "🎙️ Loading free Whisper and transcribing your video..."
                 ):
 
-                    # Import only when the feature is used so the rest of
-                    # Hustle Studio can start normally.
                     from faster_whisper import WhisperModel
 
                     with tempfile.NamedTemporaryFile(
@@ -742,15 +759,20 @@ if page == "🎙️ AI Subtitles":
                         audio_path
                     ]
 
-                    subprocess.run(
+                    extract_result = subprocess.run(
                         extract_audio_cmd,
                         stdout=subprocess.PIPE,
                         stderr=subprocess.PIPE,
-                        check=True
+                        text=True
                     )
 
-                    # CPU + int8 keeps the free/local version much lighter.
-                    # The model is cached by faster-whisper after first use.
+                    if extract_result.returncode != 0:
+                        raise RuntimeError(
+                            "FFmpeg could not extract the audio.\n\n"
+                            + extract_result.stderr[-2500:]
+                        )
+
+                    # Tiny keeps the free version lighter on CPU/RAM.
                     model = WhisperModel(
                         "tiny",
                         device="cpu",
@@ -768,80 +790,90 @@ if page == "🎙️ AI Subtitles":
 
                     if not segment_list:
                         raise RuntimeError(
-                            "No speech was detected in the video."
-                        )
-
-                    def srt_timestamp(seconds):
-                        seconds = max(0.0, float(seconds or 0.0))
-                        total_ms = int(round(seconds * 1000))
-
-                        hours = total_ms // 3600000
-                        total_ms %= 3600000
-                        minutes = total_ms // 60000
-                        total_ms %= 60000
-                        secs = total_ms // 1000
-                        millis = total_ms % 1000
-
-                        return (
-                            f"{hours:02d}:{minutes:02d}:{secs:02d},"
-                            f"{millis:03d}"
+                            "No speech was detected. Make sure the video "
+                            "contains clear spoken audio."
                         )
 
                     transcript_lines = []
-                    srt_lines = []
 
-                    for index, segment in enumerate(segment_list, start=1):
+                    for segment in segment_list:
+                        text = str(segment.text).strip()
+
+                        if text:
+                            transcript_lines.append(text)
+
+                    if not transcript_lines:
+                        raise RuntimeError(
+                            "Whisper returned no readable speech."
+                        )
+
+                    hs["subtitle_transcript"] = "\n".join(
+                        transcript_lines
+                    )
+
+                # --------------------------------------------------------
+                # 3. Create SRT backup for the user
+                # --------------------------------------------------------
+                with tempfile.NamedTemporaryFile(
+                    mode="w",
+                    delete=False,
+                    suffix=".srt",
+                    encoding="utf-8"
+                ) as srt_file:
+
+                    srt_number = 1
+
+                    for segment in segment_list:
 
                         text = str(segment.text).strip()
 
                         if not text:
                             continue
 
-                        start_time = float(segment.start)
-                        end_time = float(segment.end)
+                        def srt_timestamp(seconds):
+                            total_ms = max(
+                                0,
+                                int(round(float(seconds) * 1000))
+                            )
 
-                        transcript_lines.append(text)
+                            hours = total_ms // 3600000
+                            total_ms %= 3600000
+                            minutes = total_ms // 60000
+                            total_ms %= 60000
+                            secs = total_ms // 1000
+                            millis = total_ms % 1000
 
-                        srt_lines.extend([
-                            str(index),
-                            (
-                                f"{srt_timestamp(start_time)} --> "
-                                f"{srt_timestamp(end_time)}"
-                            ),
-                            text,
-                            ""
-                        ])
+                            return (
+                                f"{hours:02d}:{minutes:02d}:"
+                                f"{secs:02d},{millis:03d}"
+                            )
 
-                    if not transcript_lines:
-                        raise RuntimeError(
-                            "Whisper did not return readable speech."
+                        srt_file.write(
+                            f"{srt_number}\n"
+                            f"{srt_timestamp(segment.start)} --> "
+                            f"{srt_timestamp(segment.end)}\n"
+                            f"{text}\n\n"
                         )
 
-                    with tempfile.NamedTemporaryFile(
-                        mode="w",
-                        delete=False,
-                        suffix=".srt",
-                        encoding="utf-8"
-                    ) as srt_file:
-                        srt_file.write("\n".join(srt_lines))
-                        srt_path = srt_file.name
+                        srt_number += 1
 
-                    hs["subtitle_transcript"] = "\n".join(
-                        transcript_lines
-                    )
+                    srt_path = srt_file.name
 
-                with st.spinner("🎬 Styling and burning captions..."):
+                # --------------------------------------------------------
+                # 4. Burn captions with FFmpeg DRAW TEXT
+                #
+                # This intentionally does NOT use the ASS/subtitles
+                # filter because some Streamlit FFmpeg builds do not
+                # include libass. drawtext is much more portable.
+                # --------------------------------------------------------
+                with st.spinner(
+                    "🎬 Burning captions directly into the video..."
+                ):
 
                     clean_color = subtitle_color.lstrip("#")
 
                     if len(clean_color) != 6:
                         clean_color = "FFFFFF"
-
-                    rr = clean_color[0:2]
-                    gg = clean_color[2:4]
-                    bb = clean_color[4:6]
-
-                    ass_color = f"&H00{bb}{gg}{rr}"
 
                     size_map = {
                         "Small": 34,
@@ -854,96 +886,104 @@ if page == "🎙️ AI Subtitles":
                         44
                     )
 
-                    alignment_map = {
-                        "Bottom": 2,
-                        "Center": 5,
-                        "Top": 8
-                    }
+                    # Look for a font that commonly exists on Linux
+                    # Streamlit environments.
+                    possible_fonts = [
+                        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+                        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
+                        "/usr/share/fonts/truetype/liberation2/LiberationSans-Bold.ttf",
+                        "/usr/share/fonts/truetype/liberation2/LiberationSans-Regular.ttf"
+                    ]
 
-                    alignment = alignment_map.get(
-                        subtitle_position,
-                        2
+                    font_path = next(
+                        (
+                            font
+                            for font in possible_fonts
+                            if os.path.exists(font)
+                        ),
+                        None
                     )
 
-                    ass_path = tempfile.mktemp(suffix=".ass")
+                    # drawtext can also use a font name when a font file
+                    # is unavailable.
+                    font_part = (
+                        f":fontfile='{font_path}'"
+                        if font_path
+                        else ":font='DejaVu Sans'"
+                    )
 
-                    ass_content = f"""[Script Info]
-ScriptType: v4.00+
-PlayResX: 1920
-PlayResY: 1080
-ScaledBorderAndShadow: yes
+                    if subtitle_position == "Top":
+                        y_expression = "60"
+                    elif subtitle_position == "Center":
+                        y_expression = "(h-text_h)/2"
+                    else:
+                        y_expression = "h-text_h-70"
 
-[V4+ Styles]
-Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: HustleStudio,Arial,{font_size},{ass_color},&H00000000,&H00000000,&H99000000,1,0,0,0,100,100,0,0,1,3,1,{alignment},80,80,55,1
+                    # One text file per timed Whisper segment means we do
+                    # not have to fight FFmpeg's complicated text escaping.
+                    draw_filters = []
 
-[Events]
-Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
-"""
-
-                    def ass_timestamp(seconds):
-                        seconds = max(0.0, float(seconds or 0.0))
-
-                        hours = int(seconds // 3600)
-                        minutes = int((seconds % 3600) // 60)
-                        secs = int(seconds % 60)
-                        centiseconds = int(
-                            round((seconds - int(seconds)) * 100)
-                        )
-
-                        if centiseconds >= 100:
-                            secs += 1
-                            centiseconds = 0
-
-                        return (
-                            f"{hours}:{minutes:02d}:{secs:02d}."
-                            f"{centiseconds:02d}"
-                        )
-
-                    event_lines = []
-
-                    for segment in segment_list:
+                    for number, segment in enumerate(
+                        segment_list,
+                        start=1
+                    ):
 
                         text = str(segment.text).strip()
 
                         if not text:
                             continue
 
-                        safe_text = (
-                            text
-                            .replace("\\", r"\\")
-                            .replace("{", r"\{")
-                            .replace("}", r"\}")
-                            .replace("\n", r"\N")
+                        text_path = tempfile.mktemp(
+                            suffix=f"_{number}.txt"
                         )
 
-                        event_lines.append(
-                            "Dialogue: 0,"
-                            f"{ass_timestamp(segment.start)},"
-                            f"{ass_timestamp(segment.end)},"
-                            f"HustleStudio,,0,0,0,,{safe_text}"
+                        with open(
+                            text_path,
+                            "w",
+                            encoding="utf-8"
+                        ) as text_file:
+                            text_file.write(text)
+
+                        text_paths.append(text_path)
+
+                        filter_text_path = (
+                            text_path
+                            .replace("\\", "/")
+                            .replace(":", r"\:")
+                            .replace("'", r"\'")
                         )
 
-                    ass_content += "\n".join(event_lines)
+                        # White text by default, selected color from the UI,
+                        # black box behind it for readability.
+                        draw_filter = (
+                            "drawtext="
+                            f"fontcolor=#{clean_color}:"
+                            f"fontsize={font_size}:"
+                            f"fontfile='{filter_text_path}':"
+                            "x=(w-text_w)/2:"
+                            f"y={y_expression}:"
+                            "box=1:"
+                            "boxcolor=black@0.65:"
+                            "boxborderw=18:"
+                            f"enable='between(t,{float(segment.start):.3f},{float(segment.end):.3f})'"
+                        )
 
-                    with open(
-                        ass_path,
-                        "w",
-                        encoding="utf-8"
-                    ) as ass_file:
-                        ass_file.write(ass_content)
+                        draw_filters.append(draw_filter)
+
+                    if not draw_filters:
+                        raise RuntimeError(
+                            "No caption segments were available to burn."
+                        )
+
+                    video_filter = ",".join(draw_filters)
 
                     output_path = tempfile.mktemp(suffix=".mp4")
-
-                    # Use a simple FFmpeg filter path. Forward slashes are
-                    # required inside the filter expression on Windows.
-                    ass_filter_path = ass_path.replace("\\", "/").replace(":", r"\:")
 
                     burn_cmd = [
                         "ffmpeg",
                         "-y",
                         "-i", input_path,
-                        "-vf", f"ass='{ass_filter_path}'",
+                        "-vf", video_filter,
                         "-map", "0:v:0",
                         "-map", "0:a:0?",
                         "-c:v", "libx264",
@@ -957,39 +997,60 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
                         output_path
                     ]
 
-                    subprocess.run(
+                    burn_result = subprocess.run(
                         burn_cmd,
                         stdout=subprocess.PIPE,
                         stderr=subprocess.PIPE,
-                        check=True
+                        text=True
                     )
 
-                    with open(output_path, "rb") as finished_video:
+                    if burn_result.returncode != 0:
+                        raise RuntimeError(
+                            "FFmpeg could not burn the captions.\n\n"
+                            + burn_result.stderr[-4000:]
+                        )
+
+                    if not os.path.exists(output_path):
+                        raise RuntimeError(
+                            "FFmpeg finished but did not create the captioned video."
+                        )
+
+                    if os.path.getsize(output_path) < 10000:
+                        raise RuntimeError(
+                            "The generated video file is unexpectedly small."
+                        )
+
+                    with open(
+                        output_path,
+                        "rb"
+                    ) as finished_video:
+
                         hs["subtitle_video"] = finished_video.read()
 
+                    # Only charge the caption credit after successful output.
                     use_credit("captions_left")
 
                 st.success(
-                    "🎉 AI subtitles are ready — and this version did not "
-                    "use your OpenAI API key!"
+                    "🎉 Your captions are permanently burned into the video!"
+                )
+
+                st.download_button(
+                    "📥 Download Captioned Video",
+                    data=hs["subtitle_video"],
+                    file_name="hustlestudio_captioned_video.mp4",
+                    mime="video/mp4",
+                    key="download_ai_subtitles_after_generation"
                 )
 
             except ImportError:
                 st.error(
                     "❌ faster-whisper is not installed. "
-                    "Add it to requirements.txt and redeploy."
+                    "Make sure requirements.txt contains faster-whisper, "
+                    "then redeploy."
                 )
 
-            except FileNotFoundError:
-                st.error(
-                    "❌ FFmpeg is not available in this Streamlit environment."
-                )
-
-            except subprocess.CalledProcessError:
-                st.error(
-                    "❌ FFmpeg could not process this video. "
-                    "Try a standard MP4 file."
-                )
+            except RuntimeError as error:
+                st.error(f"❌ {error}")
 
             except Exception as error:
                 st.error(
@@ -998,13 +1059,15 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 
             finally:
 
-                for path in [
+                cleanup_paths = [
                     input_path,
                     audio_path,
                     output_path,
-                    ass_path,
-                    locals().get("srt_path")
-                ]:
+                    srt_path,
+                    *text_paths
+                ]
+
+                for path in cleanup_paths:
 
                     if path and os.path.exists(path):
 
