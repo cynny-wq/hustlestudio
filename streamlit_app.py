@@ -207,12 +207,16 @@ if workspace_selection == "🧠 Strategy Studio":
         with st.expander("📲 3. Social Media Optimization Kit (Caption & Tags)", expanded=True):
             st.text_area("Copy Caption Pack:", value=st.session_state.workspace_data["captions"], height=120)
 # ==========================================
-# 5. MODULE 2: CAPTION KING STUDIO (WITH 3 FREE TRIALS)
+# 5. MODULE 2: CAPTION KING STUDIO (WITH AUTOMATIC SELF-HEALING TRIAL ENGINE)
 # ==========================================
 elif workspace_selection == "🎬 Caption King Studio":
     st.title("🎬 Caption King Studio")
     st.markdown("Burn stylized, high-retention subtitles directly into your short-form video assets.")
     
+    # SAFETY FALLBACK: If your old browser session doesn't have the trial key yet, create it instantly
+    if "free_captions_left" not in st.session_state.workspace_data:
+        st.session_state.workspace_data["free_captions_left"] = 3
+
     # Live balance tracking alert metrics
     trials_left = st.session_state.workspace_data["free_captions_left"]
     if trials_left > 0:
@@ -236,7 +240,7 @@ elif workspace_selection == "🎬 Caption King Studio":
             # Check if user has remaining trial capacity
             if trials_left > 0:
                 with st.spinner("⚡ Processing video frames and auto-aligning subtitles..."):
-                    # Deduct one generation from local memory
+                    # Deduct one generation from local memory safely
                     st.session_state.workspace_data["free_captions_left"] -= 1
                     
                     st.success("🎉 Video rendered successfully using your free trial credit!")
@@ -251,7 +255,7 @@ elif workspace_selection == "🎬 Caption King Studio":
                         mime="video/mp4"
                     )
                     
-                    # Refreshing browser view context to show updated trial balance
+                    # Force page context refresh to display updated trial balance instantly
                     st.rerun()
             else:
                 st.warning("⚠️ Access Denied: Please authorize a pricing plan in the Monetization Portal to process this asset.")
