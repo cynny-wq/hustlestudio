@@ -104,11 +104,23 @@ with tab1:
 # ==========================================
 with tab2:
     st.subheader("📝 Tool 2: Local Script Builder")
-    st.markdown("Turn your selected hook into a structured script configuration without using AI credits.")
+    st.markdown("Turn your selected hook into a structured script config mapped to your specific business niche.")
     
     active_hook = st.text_area(
         "Your Selected Video Hook:", 
         value=st.session_state.selected_hook,
+    )
+
+    # NEW: Niche Selector Component
+    video_niche = st.selectbox(
+        "🎯 Select Video Niche / Category",
+        [
+            "General Hustle & Business",
+            "Fashion & Thrift (Mitumba/Bales)",
+            "Real Estate & Housing (Bedsitters/Apartments)",
+            "Food & Cooking (Pilau/Local Recipes)",
+            "Tech & Gadget Reviews"
+        ]
     )
 
     delivery_style = st.selectbox(
@@ -123,27 +135,54 @@ with tab2:
 
     if st.button("🔥 Compile High-Retention Script"):
         if active_hook.strip():
-            topic = st.session_state.current_topic if st.session_state.current_topic else "this industry"
+            topic = st.session_state.current_topic if st.session_state.current_topic else "this business"
             
-            # Localized architectural templates mapping based on user selection
-            if delivery_style == "Comedic / Local Vibe (Sheng Mix)":
-                script_body = f"Wasee wengi wanadhani {topic} ni mchezo, lakini ukweli ni kwamba unahitaji strategy safi. Sio kila siku unacheza bahati nasibu hapa Nairobi."
-                cta = f"Kama unataka kuacha kuangusha amani na {topic}, nifollow sasa hivi upate maujuzi kila siku!"
-            elif delivery_style == "Energetic & Fast-Paced":
-                script_body = f"Stop scrolling! Most people fail at {topic} because they skip the most important foundation step. You need to focus on what actually moves the needle."
-                cta = f"Hit that follow button right now if you want to scale your {topic} game this month!"
-            elif delivery_style == "Storytelling & Emotional":
-                script_body = f"When I first started looking into {topic}, I lost so much time trying to figure it out alone. Nobody was willing to share the real steps to success."
-                cta = f"Drop a comment sharing your biggest challenge with {topic}, and let's win together."
-            else:  # Educational & Corporate
-                script_body = f"Data shows that efficiency in {topic} relies on clear preparation and avoiding repetitive administrative bottlenecks."
-                cta = f"Save this video for reference and follow this page for weekly market breakdowns."
+            # Base variables for injection
+            script_body = ""
+            cta = ""
+
+            # SMART LOCALIZED TEMPLATE LOGIC MACHINE
+            if video_niche == "Fashion & Thrift (Mitumba/Bales)":
+                if delivery_style == "Comedic / Local Vibe (Sheng Mix)":
+                    script_body = f"Wasee wanadhani kuuza {topic} ni kwenda tu Gikomba asubuhi na kuchagua nguo. Ukweli ni kwamba unapigwa character development na supplier usipochunga!"
+                    cta = f"Kama unataka kupata zile camera pieces safi za {topic} bila kuoshwa, nifollow sasa hivi!"
+                else:
+                    script_body = f"The secret to making margins with {topic} isn't just buying cheap bales. It's about styling the pieces uniquely on camera so they look like high-end designer wear."
+                    cta = f"We restock unique items weekly. Click the link in our bio to join our exclusive WhatsApp group!"
+
+            elif video_niche == "Real Estate & Housing (Bedsitters/Apartments)":
+                if delivery_style == "Storytelling & Emotional":
+                    script_body = f"When you are looking for houses around Nairobi, agents will show you a place and call it '5 minutes from the highway' town, only to find out you need a whole safari to get there."
+                    cta = f"Don't get scammed by fake house listings. Drop a comment with your budget and I'll find a match."
+                else:
+                    script_body = f"Before signing that lease or paying a deposit for {topic}, you must inspect the water consistency, tokens billing system, and security structure of that zone."
+                    cta = f"Share this video with a friend who is planning to relocate or upgrade houses soon!"
+
+            elif video_niche == "Food & Cooking (Pilau/Local Recipes)":
+                script_body = f"Siri ya {topic} kunoga sio kuweka viungo mingi sana. Ni timing! Ukikimbiza moto, kila kitu kinaungua na unapoteza ule ladha halisi ya nyumbani."
+                cta = f"Tafadhali hit that follow button for more quick, budget-friendly Kenyan recipes every week!"
+
+            elif video_niche == "Tech & Gadget Reviews":
+                script_body = f"People always overpay for specifications they don't even use. You don't need a high-end flagship setup just to run basic operations for your {topic} tasks."
+                cta = f"Drop the name of your current phone model in the comments, and I'll tell you if it's time to upgrade!"
+
+            else:  # General Hustle & Business
+                if delivery_style == "Comedic / Local Vibe (Sheng Mix)":
+                    script_body = f"Wasee wengi wanadhani {topic} ni mchezo, lakini ukweli ni kwamba unahitaji strategy safi. Sio kila siku unacheza bahati nasibu hapa Nairobi."
+                    cta = f"Kama unataka kuacha kuangusha amani na {topic}, nifollow sasa hivi upate maujuzi kila siku!"
+                elif delivery_style == "Energetic & Fast-Paced":
+                    script_body = f"Stop scrolling! Most people fail at {topic} because they skip the most important foundation step. You need to focus on what actually moves the needle."
+                    cta = f"Hit that follow button right now if you want to scale your {topic} game this month!"
+                else:
+                    script_body = f"Success in {topic} requires consistency. The market shifts daily in East Africa, and those who track data manually are getting left behind."
+                    cta = f"Save this video for reference and follow this page for weekly market breakdowns."
 
             # Structure compiled engine text block
             st.session_state.generated_script = f"""### 🚨 1. HOOK
 "{active_hook}"
 
 ### 📦 2. BODY STORY
+* **[Niche Target]:** {video_niche}
 * **[Visual Cue]:** Close up shot talking directly to the mobile phone lens.
 * **[Script Text]:** {script_body}
 
@@ -181,24 +220,4 @@ with tab3:
         ["TikTok", "Instagram Reels", "YouTube Shorts", "Facebook Reels"]
     )
 
-    if st.button("👑 Compile Viral Captions"):
-        if script_context.strip():
-            topic = st.session_state.current_topic if st.session_state.current_topic else "Hustle"
-            
-            # Static generation formulas bypassing cloud costs entirely
-            st.markdown("### 🏆 Your Caption Optimization Package")
-            st.markdown(f"""
-### 💥 Caption Variant 1
-"The raw truth about {topic} that nobody tells you... 🤫 Watch till the end! #{platform}Tips"
-
-### 💥 Caption Variant 2
-"Don't make this mistake in Kenya! 🛑 Drop your thoughts below. 👇"
-
-### 🏷️ Optimized Local Hashtag Pack
-`#KenyaTikTok #NairobiHustle #GainWithMchina #{platform}Marketing #{topic}Kenya #ContentCreatorKE #Biashara`
-
-### 📌 Comment Pin Strategy
-* **Pin this question:** *"Ni mistake gani ushawai fanya ukijaribu hii? Let's talk in the comments! 👇"*
-""")
-        else:
-            st.warning("⚠️ Please provide a video script or text context first.")
+if st.button("👑 Compile Viral Captions"):if script_context.strip():topic = st.session_state.current_topic if st.session_state.current_topic else "Hustle"# Dynamic hashtag tailoring matching the niche keywordsst.markdown("### 🏆 Your Caption Optimization Package")st.markdown(f"""
