@@ -955,11 +955,23 @@ if page == "🎙️ AI Subtitles":
 
                         # White text by default, selected color from the UI,
                         # black box behind it for readability.
+                        # IMPORTANT:
+                        # fontfile points to an actual .ttf font.
+                        # textfile points to the temporary file containing
+                        # the Whisper caption text.
+                        if font_path:
+                            font_option = (
+                                f"fontfile='{font_path.replace(chr(92), '/').replace(':', r'\\:')}'"
+                            )
+                        else:
+                            font_option = "font='DejaVu Sans'"
+
                         draw_filter = (
                             "drawtext="
+                            f"{font_option}:"
+                            f"textfile='{filter_text_path}':"
                             f"fontcolor=#{clean_color}:"
                             f"fontsize={font_size}:"
-                            f"fontfile='{filter_text_path}':"
                             "x=(w-text_w)/2:"
                             f"y={y_expression}:"
                             "box=1:"
